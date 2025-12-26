@@ -1,0 +1,16 @@
+[Unit]
+Description=TradingView Strategy Collector Timer
+Documentation=https://github.com/strategy-research-lab
+
+[Timer]
+# 매 6시간마다 실행 (00:00, 06:00, 12:00, 18:00 UTC)
+OnCalendar=*-*-* 00,06,12,18:00:00
+# 시작 시 즉시 한 번 실행
+OnBootSec=5min
+# 놓친 실행이 있으면 즉시 실행
+Persistent=true
+# 실행 시간 분산 (서버 부하 방지)
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

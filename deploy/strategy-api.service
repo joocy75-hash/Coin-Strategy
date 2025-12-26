@@ -1,0 +1,19 @@
+[Unit]
+Description=Strategy Research Lab API Server
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/strategy-research-lab
+Environment=PATH=/opt/strategy-research-lab/venv/bin:/usr/local/bin:/usr/bin
+ExecStart=/opt/strategy-research-lab/venv/bin/uvicorn api.server:app --host 0.0.0.0 --port 8000
+Restart=always
+RestartSec=10
+
+# 로깅
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

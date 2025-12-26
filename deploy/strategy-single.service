@@ -1,0 +1,25 @@
+[Unit]
+Description=TradingView Strategy Collector (Single Run)
+Documentation=https://github.com/strategy-research-lab
+After=network.target
+
+[Service]
+Type=oneshot
+User=root
+WorkingDirectory=/opt/strategy-research-lab
+Environment=PATH=/opt/strategy-research-lab/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+EnvironmentFile=/opt/strategy-research-lab/.env
+
+# 단일 실행 (타이머와 함께 사용)
+ExecStart=/opt/strategy-research-lab/venv/bin/python deploy/auto_collector.py --max-strategies 30 --min-likes 500
+
+# 로깅
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=strategy-collector
+
+# 타임아웃 (최대 2시간)
+TimeoutStartSec=7200
+
+[Install]
+WantedBy=multi-user.target

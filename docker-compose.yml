@@ -1,0 +1,80 @@
+# TradingView Strategy Research Lab - Docker Compose
+# Group C: AI Trading Platform (격리된 리소스 할당)
+
+services:
+  strategy-lab:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: strategy-research-lab
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - TZ=Asia/Seoul
+      - PYTHONUNBUFFERED=1
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    networks:
+      - group_c_network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # 스케줄러 서비스 (자동 수집)
+  scheduler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: strategy-scheduler
+    restart: always
+    command: ["python", "scripts/auto_collector_service.py"]
+    environment:
+      - TZ=Asia/Seoul
+      - PYTHONUNBUFFERED=1
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    networks:
+      - group_c_network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.5'
+          memory: 1536M
+        reservations:
+          cpus: '0.25'
+          memory: 256M
+    depends_on:
+      strategy-lab:
+        condition: service_healthy
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  group_c_network:
+    external: true

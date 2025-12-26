@@ -1,0 +1,97 @@
+# GitHub Actions - Auto Deploy to Hetzner Server
+# main 브랜치에 push 시 자동으로 원격 서버에 배포
+#
+# Security Note: This workflow only uses repository secrets (SSH_PRIVATE_KEY, ANTHROPIC_API_KEY)
+# and does not process any untrusted user input (issue titles, PR descriptions, etc.)
+
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  SERVER_IP: 5.161.112.248
+  DEPLOY_PATH: /root/service_c/strategy-research-lab
+
+jobs:
+  deploy:
+    name: Deploy to Hetzner Server
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup SSH Key
+        env:
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $SERVER_IP >> ~/.ssh/known_hosts
+
+      - name: Create .env file on server
+        env:
+          ANTHROPIC_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          ssh root@$SERVER_IP "cat > $DEPLOY_PATH/.env << 'ENVFILE'
+          ANTHROPIC_API_KEY=${ANTHROPIC_KEY}
+          DB_PATH=data/strategies.db
+          MAX_STRATEGIES=50
+          MIN_LIKES=500
+          HEADLESS=true
+          TIMEOUT=30000
+          LLM_MODEL=claude-3-5-sonnet-20241022
+          SKIP_LLM=false
+          MAX_RETRIES=3
+          OUTPUT_DIR=data/converted
+          LOGS_DIR=logs
+          RATE_LIMIT_DELAY=1.0
+          ENVFILE"
+
+      - name: Deploy to server
+        run: |
+          rsync -avz --delete \
+            --exclude '.git' \
+            --exclude '.github' \
+            --exclude '__pycache__' \
+            --exclude '*.pyc' \
+            --exclude '.pytest_cache' \
+            --exclude 'venv' \
+            --exclude '.env' \
+            --exclude 'data/' \
+            --exclude 'logs/' \
+            ./ root@$SERVER_IP:$DEPLOY_PATH/
+
+      - name: Build and restart containers
+        run: |
+          ssh root@$SERVER_IP "cd $DEPLOY_PATH && \
+            mkdir -p data logs data/converted data/reports && \
+            docker compose down || true && \
+            docker compose build --no-cache && \
+            docker compose up -d && \
+            sleep 10 && \
+            docker compose ps && \
+            docker compose logs --tail=20"
+
+      - name: Health Check
+        run: |
+          sleep 30
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://$SERVER_IP:8080/api/health || echo "000")
+          if [ "$response" = "200" ]; then
+            echo "Health check passed!"
+          else
+            echo "Health check returned: $response"
+            ssh root@$SERVER_IP "docker compose -f $DEPLOY_PATH/docker-compose.yml logs --tail=50"
+            exit 1
+          fi
+
+      - name: Deployment Summary
+        if: success()
+        run: |
+          echo "Deployment successful!"
+          echo "API URL: http://$SERVER_IP:8080/api/docs"

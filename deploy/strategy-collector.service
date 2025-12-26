@@ -1,0 +1,32 @@
+[Unit]
+Description=TradingView Strategy Collector Service
+Documentation=https://github.com/strategy-research-lab
+After=network.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/strategy-research-lab
+Environment=PATH=/opt/strategy-research-lab/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+EnvironmentFile=/opt/strategy-research-lab/.env
+
+# 연속 실행 모드 (6시간마다 자동 수집)
+ExecStart=/opt/strategy-research-lab/venv/bin/python deploy/auto_collector.py --continuous --max-strategies 30 --min-likes 500
+
+# 재시작 설정
+Restart=always
+RestartSec=60
+StartLimitInterval=600
+StartLimitBurst=5
+
+# 로깅
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=strategy-collector
+
+# 보안 설정
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target
