@@ -37,6 +37,9 @@ psutil>=5.9.0
 # HTTP Client
 httpx>=0.25.0
 
+# Crypto Exchange (Backtesting)
+ccxt>=4.2.0
+
 # Utilities
 tenacity>=8.2.0  # Retry logic
 

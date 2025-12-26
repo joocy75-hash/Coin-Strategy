@@ -81,7 +81,7 @@ jobs:
       - name: Health Check
         run: |
           sleep 30
-          response=$(curl -s -o /dev/null -w "%{http_code}" http://$SERVER_IP:8080/api/health || echo "000")
+          response=$(curl -s -o /dev/null -w "%{http_code}" http://$SERVER_IP:8081/api/health || echo "000")
           if [ "$response" = "200" ]; then
             echo "Health check passed!"
           else
@@ -94,4 +94,4 @@ jobs:
         if: success()
         run: |
           echo "Deployment successful!"
-          echo "API URL: http://$SERVER_IP:8080/api/docs"
+          echo "API URL: http://$SERVER_IP:8081/api/docs"
