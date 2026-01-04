@@ -81,8 +81,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 경로 설정 (서버 배포 기준)
-BASE_DIR = Path("/opt/strategy-research-lab")
+# 경로 설정 (Docker 컨테이너 환경 기준)
+import os
+BASE_DIR = Path(os.getenv("APP_BASE_DIR", "/app"))
 DB_PATH = BASE_DIR / "data" / "strategies.db"
 DATA_DIR = BASE_DIR / "data"
 

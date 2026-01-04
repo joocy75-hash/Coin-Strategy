@@ -1,5 +1,6 @@
 """
-Binance OHLCV data collector for backtesting.
+Bitget OHLCV data collector for backtesting.
+(Changed from Binance due to US region restrictions)
 """
 
 import ccxt
@@ -14,23 +15,23 @@ import json
 logger = logging.getLogger(__name__)
 
 
-class BinanceDataCollector:
-    """Collects and caches OHLCV data from Binance exchange."""
+class BitgetDataCollector:
+    """Collects and caches OHLCV data from Bitget exchange."""
 
     SUPPORTED_TIMEFRAMES = ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w"]
     MAX_CANDLES_PER_REQUEST = 1000
 
     def __init__(self, cache_dir: str = "data/market_data"):
-        """Initialize Binance data collector."""
+        """Initialize Bitget data collector."""
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
-        self.exchange = ccxt.binance({
+        self.exchange = ccxt.bitget({
             'enableRateLimit': True,
             'options': {'defaultType': 'spot'}
         })
 
-        logger.info(f"BinanceDataCollector initialized with cache dir: {self.cache_dir}")
+        logger.info(f"BitgetDataCollector initialized with cache dir: {self.cache_dir}")
 
     async def fetch_ohlcv(
         self,
@@ -190,14 +191,19 @@ class BinanceDataCollector:
         return df.sort_values('timestamp').reset_index(drop=True)
 
     async def close(self):
-        await asyncio.to_thread(self.exchange.close)
+        """Close exchange connection if supported."""
+        if hasattr(self.exchange, 'close'):
+            try:
+                await asyncio.to_thread(self.exchange.close)
+            except Exception:
+                pass  # Some exchanges don't support close
 
 
-class SyncBinanceDataCollector:
-    """Synchronous wrapper for BinanceDataCollector."""
+class SyncBitgetDataCollector:
+    """Synchronous wrapper for BitgetDataCollector."""
 
     def __init__(self, cache_dir: str = "data/market_data"):
-        self.collector = BinanceDataCollector(cache_dir)
+        self.collector = BitgetDataCollector(cache_dir)
 
     def fetch_ohlcv(self, symbol: str, timeframe: str, start_date: str, end_date: str, force_refresh: bool = False) -> pd.DataFrame:
         return asyncio.run(self.collector.fetch_ohlcv(symbol, timeframe, start_date, end_date, force_refresh))
@@ -213,3 +219,8 @@ class SyncBinanceDataCollector:
 
     def clear_cache(self, symbol: Optional[str] = None, timeframe: Optional[str] = None) -> int:
         return self.collector.clear_cache(symbol, timeframe)
+
+
+# Backward compatibility aliases
+BinanceDataCollector = BitgetDataCollector
+SyncBinanceDataCollector = SyncBitgetDataCollector

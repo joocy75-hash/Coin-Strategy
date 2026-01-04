@@ -8,6 +8,13 @@ from pathlib import Path
 class Config(BaseSettings):
     """Application configuration using pydantic-settings."""
 
+    model_config = {
+        "extra": "ignore",  # Ignore extra environment variables
+        "env_file": ".env",
+        "env_file_encoding": "utf-8",
+        "case_sensitive": False
+    }
+
     # API Keys
     openai_api_key: Optional[str] = None
     anthropic_api_key: Optional[str] = None
@@ -39,11 +46,6 @@ class Config(BaseSettings):
 
     # Rate Limiting
     rate_limit_delay: float = 1.0  # seconds between requests
-
-    class Config:
-        env_file = ".env"
-        env_file_encoding = "utf-8"
-        case_sensitive = False
 
     @classmethod
     def load(cls) -> "Config":

@@ -44,6 +44,8 @@ class StrategyData:
     script_url: str
     is_open_source: bool = True
     collected_at: str = ""
+    pine_code: Optional[str] = None  # Pine Script 코드
+    pine_version: int = 5  # Pine Script 버전
 
     def __post_init__(self):
         if not self.collected_at:
@@ -64,7 +66,7 @@ class HumanLikeScraper:
 
     def __init__(
         self,
-        headless: bool = False,  # 기본적으로 브라우저 보이기
+        headless: bool = True,  # 서버 환경에서는 headless 필수
         slow_mode: bool = True,   # 천천히 동작
         session_file: Optional[str] = None  # 세션 저장/복원
     ):

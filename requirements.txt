@@ -23,6 +23,7 @@ Jinja2>=3.1.0
 # Data Processing
 numpy>=1.26.0
 pandas>=2.1.0
+pyarrow>=14.0.0  # Parquet support for caching
 
 # CLI Interface
 rich>=13.7.0
