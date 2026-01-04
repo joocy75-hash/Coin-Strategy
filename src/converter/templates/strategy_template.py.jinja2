@@ -1,0 +1,252 @@
+"""
+{{ metadata.strategy_name }}
+
+Generated from Pine Script v{{ metadata.pine_version }}
+Generated at: {{ metadata.generated_at }}
+Complexity: {{ metadata.complexity_score }}
+
+Pine Script Type: {{ metadata.script_type }}
+{% if metadata.indicators_used %}
+Indicators Used: {{ metadata.indicators_used | join(', ') }}
+{% endif %}
+"""
+
+{{ imports }}
+
+{% if pine_code_comment %}
+{{ pine_code_comment }}
+{% endif %}
+
+
+class {{ class_name }}:
+    """
+    {{ metadata.strategy_name }}
+
+    {{ metadata.description | default('Automated trading strategy generated from Pine Script') }}
+
+    Parameters:
+    {% for input in inputs %}
+    - {{ input.name }}: {{ input.title }} (default: {{ input.default_value }})
+    {% endfor %}
+    """
+
+    def __init__(self, params: Dict = None, user_id: int = None):
+        """
+        Initialize strategy with parameters.
+
+        Args:
+            params: Strategy parameters dictionary
+            user_id: User ID for tracking (optional)
+        """
+        self.params = params or {}
+        self.user_id = user_id
+        self.strategy_code = "{{ strategy_code }}"
+
+        # Initialize IndicatorMapper for technical indicators
+        self.indicator_mapper = IndicatorMapper()
+
+        # Input parameters
+        {% for input in inputs %}
+        self.{{ input.name }} = self.params.get("{{ input.name }}", {{ input.default_value }})  # {{ input.title }}
+        {% endfor %}
+
+        {% if state_variables %}
+        # State variables (var/varip)
+        {% for var in state_variables %}
+        self.{{ var.name }} = {{ var.initial_value }}  # {{ var.comment | default('State variable') }}
+        {% endfor %}
+        {% endif %}
+
+        # Risk management parameters
+        self.stop_loss_pct = self.params.get("stop_loss_percent", 2.0)
+        self.take_profit_pct = self.params.get("take_profit_percent", 4.0)
+
+    def generate_signal(
+        self,
+        current_price: float,
+        candles: List[Dict],
+        current_position: Optional[Dict] = None
+    ) -> Dict:
+        """
+        Generate trading signal based on strategy logic.
+
+        Args:
+            current_price: Current market price
+            candles: Historical OHLCV data (list of dicts)
+            current_position: Current position dict (if any)
+
+        Returns:
+            Signal dictionary with action, confidence, reason, etc.
+        """
+        # Data validation
+        if len(candles) < {{ min_candles | default(50) }}:
+            return self._hold("Insufficient data for analysis")
+
+        # Convert candles to pandas DataFrame for indicator calculations
+        import pandas as pd
+        df = pd.DataFrame(candles)
+
+        # Extract price series as numpy arrays
+        self.close = df['close'].values
+        self.open = df['open'].values
+        self.high = df['high'].values
+        self.low = df['low'].values
+        self.volume = df.get('volume', pd.Series([0] * len(df))).values
+
+        # Check exit conditions first if in position
+        if current_position:
+            exit_signal = self._check_exit(current_position, current_price)
+            if exit_signal:
+                return exit_signal
+
+        {% if calculated_variables %}
+        # Calculate indicators and variables
+        {% for var in calculated_variables %}
+        {{ var.code }}
+        {% endfor %}
+        {% endif %}
+
+        {% if entry_logic %}
+        # Entry logic
+        if not current_position:
+            {% for condition in entry_logic %}
+            # {{ condition.comment | default('Entry condition') }}
+            {{ condition.code }}
+            {% endfor %}
+        {% endif %}
+
+        # No signal generated
+        return self._hold("No entry/exit signal")
+
+    {% if custom_functions %}
+    # Custom functions
+    {% for func in custom_functions %}
+    {{ func.code }}
+    {% endfor %}
+    {% endif %}
+
+    def _check_exit(self, position: Dict, current_price: float) -> Optional[Dict]:
+        """
+        Check exit conditions for current position.
+
+        Args:
+            position: Current position dictionary
+            current_price: Current market price
+
+        Returns:
+            Exit signal dict if exit condition met, None otherwise
+        """
+        pnl_pct = position.get("pnl_percent", 0)
+
+        # Take profit
+        if pnl_pct >= self.take_profit_pct:
+            return {
+                "action": "close",
+                "confidence": 0.9,
+                "reason": f"Take Profit: {pnl_pct:.2f}%",
+                "strategy_type": self.strategy_code,
+                "ai_powered": False
+            }
+
+        # Stop loss
+        if pnl_pct <= -self.stop_loss_pct:
+            return {
+                "action": "close",
+                "confidence": 0.95,
+                "reason": f"Stop Loss: {pnl_pct:.2f}%",
+                "strategy_type": self.strategy_code,
+                "ai_powered": False
+            }
+
+        # Strategy-specific exit conditions
+        {% if exit_logic %}
+        {% for condition in exit_logic %}
+        # {{ condition.comment | default('Exit condition') }}
+        {{ condition.code }}
+        {% endfor %}
+        {% endif %}
+
+        return None
+
+    def _hold(self, reason: str) -> Dict:
+        """
+        Return a hold (no action) signal.
+
+        Args:
+            reason: Reason for holding
+
+        Returns:
+            Hold signal dictionary
+        """
+        return {
+            "action": "hold",
+            "confidence": 0.5,
+            "reason": reason,
+            "strategy_type": self.strategy_code,
+            "ai_powered": False
+        }
+
+    def _buy_signal(self, reason: str, confidence: float = 0.75) -> Dict:
+        """
+        Generate a buy signal.
+
+        Args:
+            reason: Reason for buy signal
+            confidence: Signal confidence (0.0 to 1.0)
+
+        Returns:
+            Buy signal dictionary
+        """
+        return {
+            "action": "buy",
+            "confidence": confidence,
+            "reason": reason,
+            "stop_loss": self.stop_loss_pct,
+            "take_profit": self.take_profit_pct,
+            "strategy_type": self.strategy_code,
+            "ai_powered": False
+        }
+
+    def _sell_signal(self, reason: str, confidence: float = 0.75) -> Dict:
+        """
+        Generate a sell signal.
+
+        Args:
+            reason: Reason for sell signal
+            confidence: Signal confidence (0.0 to 1.0)
+
+        Returns:
+            Sell signal dictionary
+        """
+        return {
+            "action": "sell",
+            "confidence": confidence,
+            "reason": reason,
+            "stop_loss": self.stop_loss_pct,
+            "take_profit": self.take_profit_pct,
+            "strategy_type": self.strategy_code,
+            "ai_powered": False
+        }
+
+
+# Function interface for compatibility
+def generate_signal(
+    current_price: float,
+    candles: List[Dict],
+    params: Dict = None,
+    current_position: Optional[Dict] = None
+) -> Dict:
+    """
+    Function wrapper for {{ class_name }}.
+
+    Args:
+        current_price: Current market price
+        candles: Historical OHLCV data
+        params: Strategy parameters
+        current_position: Current position (if any)
+
+    Returns:
+        Signal dictionary from strategy
+    """
+    strategy = {{ class_name }}(params)
+    return strategy.generate_signal(current_price, candles, current_position)
