@@ -1,0 +1,3 @@
+strategy,orig_sharpe,enh_sharpe,sharpe_improvement,orig_pf,enh_pf,pf_improvement,orig_dd,enh_dd,dd_improvement,orig_wr,enh_wr,wr_improvement,orig_moon_dev,enh_moon_dev
+SuperTrend Divergence,-0.44136685539957327,-0.4283528115912896,0.013014043808283693,0.9516885648220367,0.9320402166116598,-0.019648348210376865,-60.16337035436834,-53.69108179660345,6.472288557764891,27.64293338228042,31.987065649627755,4.344132267347334,False,False
+ATR VWMA Deviation,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,False,False

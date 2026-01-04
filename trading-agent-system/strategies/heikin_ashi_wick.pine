@@ -1,0 +1,37 @@
+//@version=5
+strategy("Heikin Ashi Wick Strategy", overlay=true, process_orders_on_close=false, pyramiding=0)
+
+// ─── Heikin Ashi Calculation ─────────────────────────
+ha_close = (open + high + low + close) / 4
+
+var float ha_open = na
+ha_open := na(ha_open[1]) ? (open + close) / 2 : (ha_open[1] + ha_close[1]) / 2
+
+ha_high = math.max(high, math.max(ha_open, ha_close))
+ha_low  = math.min(low, math.min(ha_open, ha_close))
+
+// ─── Wick Calculations ───────────────────────────────
+upper_wick = ha_high - math.max(ha_open, ha_close)
+lower_wick = math.min(ha_open, ha_close) - ha_low
+
+// ─── Candle Direction ────────────────────────────────
+ha_green = ha_close > ha_open
+
+// ─── Entry Condition ─────────────────────────────────
+long_entry = ha_green and upper_wick > 0 and strategy.position_size == 0
+
+// ─── Exit Conditions ─────────────────────────────────
+exit_no_upper_wick   = upper_wick == 0
+exit_lower_dominates = lower_wick > upper_wick
+
+long_exit = strategy.position_size > 0 and (exit_no_upper_wick or exit_lower_dominates)
+
+// ─── Orders (Next Bar Open) ──────────────────────────
+if long_entry
+    strategy.entry("HA Long", strategy.long)
+
+if long_exit
+    strategy.close("HA Long")
+
+// ─── Plot Heikin Ashi Candles ─────────────────────────
+plotcandle(ha_open, ha_high, ha_low, ha_close, title="Heikin Ashi Candles", color=ha_green ? color.green : color.red, wickcolor=ha_green ? color.green : color.red, bordercolor=ha_green ? color.green : color.red)

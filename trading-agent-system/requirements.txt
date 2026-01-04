@@ -1,0 +1,34 @@
+# Claude Agent SDK
+claude-agent-sdk>=0.1.18
+
+# Gemini API
+google-generativeai>=0.8.0
+
+# Backtesting
+backtesting>=0.3.3
+
+# Binance API
+python-binance>=1.0.19
+
+# Data Processing
+pandas>=2.0.0
+numpy>=1.24.0
+pandas-ta>=0.3.14b
+
+# Async HTTP
+aiohttp>=3.9.0
+httpx>=0.25.0
+
+# Environment
+python-dotenv>=1.0.0
+
+# Utilities
+pydantic>=2.5.0
+tenacity>=8.2.0
+rich>=13.7.0
+
+# Scheduler
+croniter>=2.0.0
+
+# Email (async)
+aiosmtplib>=3.0.0

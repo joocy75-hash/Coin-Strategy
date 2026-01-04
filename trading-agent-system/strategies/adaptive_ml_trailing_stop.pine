@@ -1,0 +1,257 @@
+// This Pine Script® code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © BOSWaves
+
+//@version=6
+indicator("Adaptive ML Trailing Stop [BOSWaves]", overlay=true)
+
+// ============================================================================
+// Inputs
+// ============================================================================
+
+// KAMA Settings
+kamaLength = input.int(20, "KAMA Length", minval=1, group="KAMA Settings", tooltip="Period for Kaufman's Adaptive Moving Average calculation. Lower values = more responsive, higher values = smoother")
+fastLength = input.int(15, "Fast Period", minval=1, group="KAMA Settings", tooltip="Fast smoothing constant for KAMA in trending markets")
+slowLength = input.int(50, "Slow Period", minval=1, group="KAMA Settings", tooltip="Slow smoothing constant for KAMA in ranging markets")
+
+// Trailing Stop Settings
+atrPeriod = input.int(21, "ATR Period", minval=1, group="Trailing Stop Settings", tooltip="Period for Average True Range calculation used for stop distance")
+baseMultiplier = input.float(2.5, "Base ATR Multiplier", minval=0.1, step=0.1, group="Trailing Stop Settings", tooltip="Base multiplier for ATR to set stop distance. Higher = wider stops")
+adaptiveStrength = input.float(1.0, "Adaptive Strength", minval=0.1, step=0.1, group="Trailing Stop Settings", tooltip="Controls how much stops adapt to market conditions. Higher = more adaptive (wider in ranging, tighter in trending)")
+
+// KNN Machine Learning Settings
+knnEnabled = input.bool(true, "Enable KNN", group="KNN Machine Learning", tooltip="Enable K-Nearest Neighbors pattern matching for enhanced predictions")
+knnK = input.int(7, "K Neighbors", minval=1, maxval=20, group="KNN Machine Learning", tooltip="Number of nearest neighbors to consider. Lower = more reactive, Higher = more stable")
+knnLookback = input.int(100, "KNN Lookback Period", minval=50, maxval=500, group="KNN Machine Learning", tooltip="Historical bars to search for similar patterns")
+knnFeatureLength = input.int(5, "Pattern Length", minval=3, maxval=20, group="KNN Machine Learning", tooltip="Number of bars in each pattern to compare")
+knnWeight = input.float(0.2, "KNN Influence", minval=0.0, maxval=1.0, step=0.1, group="KNN Machine Learning", tooltip="Weight of KNN prediction in final stop calculation. 0 = disabled, 1 = full KNN control")
+
+// Signal Settings
+diamondCooldown = input.int(5, "Diamond Cooldown Bars", minval=1, group="Signal Settings", tooltip="Minimum number of bars between diamond signals to prevent overlap")
+
+// Visual Settings
+longColor = input.color(#00ff88, "Long Color", group="Visual Settings", tooltip="Color for long positions and uptrend signals")
+shortColor = input.color(#ff3366, "Short Color", group="Visual Settings", tooltip="Color for short positions and downtrend signals")
+showGradient = input.bool(true, "Show Gradient Fill", group="Visual Settings", tooltip="Display gradient fill between price and trailing stop")
+
+// ============================================================================
+// KAMA Calculation
+// ============================================================================
+
+// Calculate KAMA components
+change = math.abs(close - close[kamaLength])
+volatility = math.sum(math.abs(close - close[1]), kamaLength)
+er = volatility != 0 ? change / volatility : 0  // Efficiency Ratio (0 to 1)
+
+fastSC = 2.0 / (fastLength + 1)
+slowSC = 2.0 / (slowLength + 1)
+sc = math.pow(er * (fastSC - slowSC) + slowSC, 2)  // Smoothing Constant
+
+var float kama = na
+kama := na(kama[1]) ? close : kama[1] + sc * (close - kama[1])
+
+// ============================================================================
+// KNN Pattern Matching
+// ============================================================================
+
+// Normalize price data for pattern comparison
+normalize(src, len) =>
+    highest = ta.highest(src, len)
+    lowest = ta.lowest(src, len)
+    priceRange = highest - lowest
+    priceRange > 0 ? (src - lowest) / priceRange : 0.5
+
+// Calculate Euclidean distance between current pattern and historical pattern
+calcDistance(offset) =>
+    if offset < knnFeatureLength or offset > knnLookback
+        999999.0  // Invalid distance
+    else
+        sum = 0.0
+        for i = 0 to knnFeatureLength - 1
+            currentNorm = normalize(close[i], knnFeatureLength)
+            historicalNorm = normalize(close[i + offset], knnFeatureLength)
+            diff = currentNorm - historicalNorm
+            sum += diff * diff
+        math.sqrt(sum)
+
+// Find K nearest neighbors and predict outcome
+var float knnPrediction = 0.5  // 0 = bearish, 1 = bullish, 0.5 = neutral
+var float knnConfidence = 0.0
+
+if knnEnabled and bar_index > knnLookback
+    // Arrays to store distances and outcomes
+    var distances = array.new_float(0)
+    var outcomes = array.new_float(0)
+    
+    array.clear(distances)
+    array.clear(outcomes)
+    
+    // Calculate distances for all historical patterns
+    for offset = knnFeatureLength to knnLookback
+        dist = calcDistance(offset)
+        if dist < 999999.0
+            array.push(distances, dist)
+            // Outcome: did price go up or down after this pattern?
+            futureReturn = (close[offset - knnFeatureLength] - close[offset]) / close[offset]
+            array.push(outcomes, futureReturn > 0 ? 1.0 : 0.0)
+    
+    // Sort by distance and get K nearest
+    if array.size(distances) >= knnK
+        // Simple selection sort for K smallest
+        for i = 0 to math.min(knnK - 1, array.size(distances) - 1)
+            minIdx = i
+            for j = i + 1 to array.size(distances) - 1
+                if array.get(distances, j) < array.get(distances, minIdx)
+                    minIdx := j
+            // Swap
+            if minIdx != i
+                tempDist = array.get(distances, i)
+                tempOut = array.get(outcomes, i)
+                array.set(distances, i, array.get(distances, minIdx))
+                array.set(outcomes, i, array.get(outcomes, minIdx))
+                array.set(distances, minIdx, tempDist)
+                array.set(outcomes, minIdx, tempOut)
+        
+        // Calculate weighted prediction from K nearest neighbors
+        totalWeight = 0.0
+        weightedSum = 0.0
+        
+        for i = 0 to math.min(knnK - 1, array.size(distances) - 1)
+            dist = array.get(distances, i)
+            outcome = array.get(outcomes, i)
+            weight = dist > 0 ? 1.0 / (dist + 0.001) : 1.0  // Inverse distance weighting
+            weightedSum += outcome * weight
+            totalWeight += weight
+        
+        knnPrediction := totalWeight > 0 ? weightedSum / totalWeight : 0.5
+        
+        // Calculate confidence based on agreement of neighbors
+        bullish = 0
+        for i = 0 to math.min(knnK - 1, array.size(outcomes) - 1)
+            if array.get(outcomes, i) > 0.5
+                bullish += 1
+        knnConfidence := math.abs((bullish / math.min(knnK, array.size(outcomes))) - 0.5) * 2
+
+// ============================================================================
+// Adaptive Trailing Stop Calculation
+// ============================================================================
+
+// Calculate adaptive ATR multiplier using KAMA efficiency
+// High ER (trending) = tighter stops, Low ER (ranging) = wider stops
+atr = ta.atr(atrPeriod)
+adaptiveMultiplier = baseMultiplier * (1 + (1 - er) * adaptiveStrength)
+
+// Apply KNN adjustment to stop distance
+// Bullish KNN prediction = tighter long stops, wider short stops
+// Bearish KNN prediction = wider long stops, tighter short stops
+knnAdjustment = knnEnabled ? (knnPrediction - 0.5) * knnWeight * knnConfidence : 0.0
+stopDistance = atr * adaptiveMultiplier
+
+// Apply KAMA smoothing to the stop calculation itself
+var float rawLongStop = na
+var float rawShortStop = na
+var float smoothLongStop = na
+var float smoothShortStop = na
+
+// Calculate raw stops with KNN adjustment
+rawLongStop := close - (stopDistance * (1 - knnAdjustment))
+rawShortStop := close + (stopDistance * (1 + knnAdjustment))
+
+// Apply KAMA smoothing to the stops
+smoothLongStop := na(smoothLongStop[1]) ? rawLongStop : smoothLongStop[1] + sc * (rawLongStop - smoothLongStop[1])
+smoothShortStop := na(smoothShortStop[1]) ? rawShortStop : smoothShortStop[1] + sc * (rawShortStop - smoothShortStop[1])
+
+// Trailing logic with KAMA-smoothed stops
+var float longStop = na
+var float shortStop = na
+var int trend = 0
+
+longStop := close[1] > longStop[1] ? math.max(smoothLongStop, longStop[1]) : smoothLongStop
+shortStop := close[1] < shortStop[1] ? math.min(smoothShortStop, shortStop[1]) : smoothShortStop
+
+// Determine trend
+prevTrend = trend
+if close > shortStop[1]
+    trend := 1
+else if close < longStop[1]
+    trend := -1
+
+// Calculate gradient intensity based on distance and efficiency
+distanceFromStop = trend == 1 ? (close - longStop) / stopDistance : (shortStop - close) / stopDistance
+gradientStrength = math.min(math.max(distanceFromStop * 50, 0), 100)
+
+// ============================================================================
+// Plot Trailing Stops
+// ============================================================================
+
+// Plot the adaptive trailing stop
+stopLine = trend == 1 ? longStop : shortStop
+stopColor = trend == 1 ? longColor : shortColor
+
+// Main stop line - with line breaks to prevent bridging between trends
+plot(trend == 1 ? longStop : na, "Long Stop", longColor, 3, plot.style_linebr)
+plot(trend == -1 ? shortStop : na, "Short Stop", shortColor, 3, plot.style_linebr)
+
+// Gradient fill between price and stop
+upperBand = showGradient ? (trend == 1 ? close : shortStop) : na
+lowerBand = showGradient ? (trend == 1 ? longStop : close) : na
+
+// Create smooth gradient with 4 layers
+mid1 = showGradient ? lowerBand + (upperBand - lowerBand) * 0.25 : na
+mid2 = showGradient ? lowerBand + (upperBand - lowerBand) * 0.50 : na
+mid3 = showGradient ? lowerBand + (upperBand - lowerBand) * 0.75 : na
+
+gradPlot1 = plot(lowerBand, display=display.none)
+gradPlot2 = plot(mid1, display=display.none)
+gradPlot3 = plot(mid2, display=display.none)
+gradPlot4 = plot(mid3, display=display.none)
+gradPlot5 = plot(upperBand, display=display.none)
+
+baseTransparency = trend == 1 ? color.new(longColor, 85) : color.new(shortColor, 85)
+midTransparency = trend == 1 ? color.new(longColor, 90) : color.new(shortColor, 90)
+lightTransparency = trend == 1 ? color.new(longColor, 95) : color.new(shortColor, 95)
+
+fill(gradPlot1, gradPlot2, showGradient ? baseTransparency : na)
+fill(gradPlot2, gradPlot3, showGradient ? midTransparency : na)
+fill(gradPlot3, gradPlot4, showGradient ? lightTransparency : na)
+fill(gradPlot4, gradPlot5, showGradient ? color.new(stopColor, 97) : na)
+
+// ============================================================================
+// Signal Markers
+// ============================================================================
+
+// Entry signal markers - circles positioned below/above bars
+plotshape(trend == 1 and prevTrend == -1, "Buy Signal", shape.circle, location.belowbar, longColor, offset=0, size=size.small, text="")
+plotshape(trend == -1 and prevTrend == 1, "Sell Signal", shape.circle, location.abovebar, shortColor, offset=0, size=size.small, text="")
+
+// Diamond cooldown mechanism
+var int lastLongDiamond = -999
+var int lastShortDiamond = -999
+
+// Diamond when price interacts with trailing stop (touches or crosses)
+longStopTouchRaw = trend == 1 and (low <= longStop and low[1] > longStop[1] or math.abs(low - longStop) < atr * 0.5)
+shortStopTouchRaw = trend == -1 and (high >= shortStop and high[1] < shortStop[1] or math.abs(high - shortStop) < atr * 0.5)
+
+// Apply cooldown filter
+longStopTouch = longStopTouchRaw and (bar_index - lastLongDiamond >= diamondCooldown)
+shortStopTouch = shortStopTouchRaw and (bar_index - lastShortDiamond >= diamondCooldown)
+
+// Update last diamond bar index
+if longStopTouch
+    lastLongDiamond := bar_index
+if shortStopTouch
+    lastShortDiamond := bar_index
+
+plotshape(longStopTouch, "Long Stop Touch", shape.diamond, location.belowbar, longColor, offset=0, size=size.small, text="")
+plotshape(shortStopTouch, "Short Stop Touch", shape.diamond, location.abovebar, shortColor, offset=0, size=size.small, text="")
+
+// ============================================================================
+// Candle Coloring & Alerts
+// ============================================================================
+
+// Candle coloring based on trend
+barColor = trend == 1 ? longColor : shortColor
+barcolor(barColor, title="Trend Candles")
+
+// Alert conditions
+alertcondition(trend == 1 and prevTrend == -1, "Long Signal", "KNN-KAMA Trailing Stop: Long Entry")
+alertcondition(trend == -1 and prevTrend == 1, "Short Signal", "KNN-KAMA Trailing Stop: Short Entry")

@@ -1,0 +1,106 @@
+//@version=5
+// Komisyon: %0.03 (Onbinde 3)
+strategy("PMax - Asymmetric Multipliers", overlay=true, initial_capital=10000, default_qty_type=strategy.percent_of_equity, default_qty_value=100, commission_type=strategy.commission.percent, commission_value=0.03)
+
+// --- Girdiler ---
+atrLength = input.int(10, title="ATR Periyodu", minval=1)
+upperMultiplier = input.float(1.5, title="ATR Çarpanı - Üst (Short)", minval=0.1, step=0.1)
+lowerMultiplier = input.float(3.0, title="ATR Çarpanı - Alt (Long)", minval=0.1, step=0.1)
+maLength = input.int(10, title="Hareketli Ortalama Uzunluğu", minval=1)
+maType = input.string("EMA", title="Hareketli Ortalama Tipi", options=["SMA", "EMA", "WMA", "RMA", "HULL", "VAR"])
+
+// --- YENİ EKLENEN: Stop Loss Ayarı ---
+stopLossPercent = input.float(5.0, title="Stop Loss Yüzdesi (%)", minval=0.1, step=0.1)
+
+src = input(close, title="Kaynak")
+
+// --- Tarih Filtresi ---
+useDateFilter = input.bool(true, title="Tarih Filtresi Kullan", group="Backtest Ayarları")
+startYear = input.int(2023, "Başlangıç Yılı", minval=1900, group="Backtest Ayarları")
+startMonth = input.int(1, "Başlangıç Ayı", minval=1, maxval=12, group="Backtest Ayarları")
+startDate = input.int(1, "Başlangıç Günü", minval=1, maxval=31, group="Backtest Ayarları")
+endYear = input.int(2099, "Bitiş Yılı", minval=1900, group="Backtest Ayarları")
+endMonth = input.int(1, "Bitiş Ayı", minval=1, maxval=12, group="Backtest Ayarları")
+endDate = input.int(1, "Bitiş Günü", minval=1, maxval=31, group="Backtest Ayarları")
+
+inDateRange = not useDateFilter or (time >= timestamp(startYear, startMonth, startDate, 00, 00) and time <= timestamp(endYear, endMonth, endDate, 23, 59))
+
+// --- Fonksiyonlar ---
+VAR_Func(src, length) =>
+    valpha = 2 / (length + 1)
+    vud1 = math.abs(src - src[1])
+    vud2 = ta.ema(vud1, length)
+    vud3 = ta.ema(src - src[1], length)
+    vmo = vud2 == 0 ? 0 : vud3 / vud2
+    vhui = valpha * math.abs(vmo)
+    var float vma = 0.0
+    vma := (src * vhui) + (nz(vma[1], src) * (1 - vhui))
+    vma
+
+getMA(source, length, type) =>
+    switch type
+        "SMA" => ta.sma(source, length)
+        "EMA" => ta.ema(source, length)
+        "WMA" => ta.wma(source, length)
+        "RMA" => ta.rma(source, length)
+        "HULL" => ta.hma(source, length)
+        "VAR" => VAR_Func(source, length)
+        => ta.ema(source, length)
+
+// --- Hesaplamalar ---
+mav = getMA(src, maLength, maType)
+atr = ta.atr(atrLength)
+
+basicUpperBand = mav + (upperMultiplier * atr)
+basicLowerBand = mav - (lowerMultiplier * atr)
+
+var float finalUpperBand = 0.0
+var float finalLowerBand = 0.0
+var int trend = 1
+
+if finalUpperBand == 0.0
+    finalUpperBand := basicUpperBand
+if finalLowerBand == 0.0
+    finalLowerBand := basicLowerBand
+
+finalUpperBand := (basicUpperBand < nz(finalUpperBand[1]) or nz(mav[1]) > nz(finalUpperBand[1])) ? basicUpperBand : nz(finalUpperBand[1])
+finalLowerBand := (basicLowerBand > nz(finalLowerBand[1]) or nz(mav[1]) < nz(finalLowerBand[1])) ? basicLowerBand : nz(finalLowerBand[1])
+
+if trend == 1 and mav < finalLowerBand[1]
+    trend := -1
+    finalUpperBand := basicUpperBand
+else if trend == -1 and mav > finalUpperBand[1]
+    trend := 1
+    finalLowerBand := basicLowerBand
+
+pmax = trend == 1 ? finalLowerBand : finalUpperBand
+pmaxToDraw = (na(pmax) or pmax == 0) ? mav : pmax
+
+// --- Görselleştirme ---
+plot(mav, color=color.blue, title="MA", linewidth=2)
+pmaxColor = trend == 1 ? color.green : color.red
+plot(pmaxToDraw, color=pmaxColor, title="PMax", linewidth=2)
+fill(plot(mav, display=display.none), plot(pmaxToDraw, display=display.none), color=trend == 1 ? color.new(color.green, 90) : color.new(color.red, 90), title="Trend Bölgesi")
+
+// --- STRATEJİ VE STOP LOSS ---
+buySignal = ta.crossover(mav, pmaxToDraw)
+sellSignal = ta.crossunder(mav, pmaxToDraw)
+
+if inDateRange
+    // LONG GİRİŞ
+    if buySignal
+        strategy.entry("Long Gir", strategy.long, comment="AL 🟢")
+
+    // LONG İÇİN STOP LOSS
+    // Eğer Long pozisyondaysak, giriş fiyatının %5 altına stop emri koy
+    if strategy.position_size > 0
+        strategy.exit("Long Stop", "Long Gir", stop = strategy.position_avg_price * (1 - stopLossPercent / 100), comment="STOP 🛑")
+
+    // SHORT GİRİŞ (Zaten vardı, ama şimdi Stop Loss ile korunuyor)
+    if sellSignal
+        strategy.entry("Short Gir", strategy.short, comment="SAT 🔴")
+
+    // SHORT İÇİN STOP LOSS
+    // Eğer Short pozisyondaysak, giriş fiyatının %5 üzerine stop emri koy
+    if strategy.position_size < 0
+        strategy.exit("Short Stop", "Short Gir", stop = strategy.position_avg_price * (1 + stopLossPercent / 100), comment="STOP 🛑")

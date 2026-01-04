@@ -1,0 +1,147 @@
+// This source code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// ©ebecihalil
+
+//@version=6
+indicator("Support and Resistance", overlay = true, max_boxes_count = 500) 
+
+// ─────────────────────────────
+// SETTINGS
+// ─────────────────────────────
+grp_logic = "Logic Settings"
+backBars       = input.int(300, "Bars to Apply", minval = 50, group = grp_logic,
+     tooltip = "The total number of historical bars the script scans to identify support and resistance levels.")
+
+pivotStrength = input.int(10, "Pivot Strength", minval = 1, group = grp_logic,
+     tooltip = "The number of bars required on both sides of a high/low to define a Pivot point.")
+
+minTouches    = input.int(2, "Min Pivot Confirmation", minval = 2, group = grp_logic,
+     tooltip = "The minimum number of pivots that must align within the same price zone before the indicator draws a box.")
+
+grp_style = "Styling"
+resColor       = input.color(color.red, "Resistance Color", group = grp_style, tooltip = "Color of the resistance zone.")
+supColor       = input.color(color.green, "Support Color", group = grp_style, tooltip = "Color of the support zone.")
+midColor       = input.color(color.gray, "In-Zone Color", group = grp_style, tooltip = "Color when price is inside the zone.")
+transpSR       = input.int(35, "Fill Transparency", minval = 0, maxval = 100, group = grp_style,
+     tooltip = "Controls the transparency of the zone boxes (0-100).")
+
+// ─────────────────────────────
+// CALCULATIONS
+// ─────────────────────────────
+float atr       = ta.atr(14) 
+float threshold = atr * 1.0
+
+startBarIndex = last_bar_index - backBars
+inRange = bar_index >= startBarIndex
+
+ph = inRange ? ta.pivothigh(high, pivotStrength, pivotStrength) : na
+pl = inRange ? ta.pivotlow(low, pivotStrength, pivotStrength) : na
+
+// ARRAYS
+var float[] c_anchors = array.new_float(0) 
+var float[] c_tops    = array.new_float(0) 
+var float[] c_bots    = array.new_float(0) 
+var int[]   c_lefts   = array.new_int(0)   
+var int[]   c_counts  = array.new_int(0)   
+var box[]   c_boxes   = array.new_box(0)   
+var int[]   c_sideState = array.new_int(0) // 1: Above, -1: Below, 0: Initial/Inside
+
+processPivot(float pPrice, int pBar) =>
+    if not na(pPrice)
+        bool foundMatch = false
+        
+        if array.size(c_anchors) > 0
+            for i = 0 to array.size(c_anchors) - 1
+                float currentTop = array.get(c_tops, i)
+                float currentBot = array.get(c_bots, i)
+                
+                float potentialTop = math.max(currentTop, pPrice)
+                float potentialBot = math.min(currentBot, pPrice)
+                
+                if (potentialTop - potentialBot) <= threshold 
+                    foundMatch := true
+                    
+                    int currentCount = array.get(c_counts, i) + 1
+                    array.set(c_counts, i, currentCount)
+                    
+                    array.set(c_tops, i, potentialTop)
+                    array.set(c_bots, i, potentialBot)
+                    
+                    if currentCount >= minTouches
+                        box b = array.get(c_boxes, i)
+                        if na(b)
+                            newBox = box.new(array.get(c_lefts, i), potentialTop, bar_index, potentialBot, 
+                                     border_color=na, bgcolor=color.new(midColor, transpSR), extend=extend.right)
+                            array.set(c_boxes, i, newBox)
+                        else
+                            box.set_top(b, potentialTop)
+                            box.set_bottom(b, potentialBot)
+                    break 
+
+        if not foundMatch
+            array.push(c_anchors, pPrice)
+            array.push(c_tops, pPrice)
+            array.push(c_bots, pPrice)
+            array.push(c_lefts, pBar)
+            array.push(c_counts, 1)
+            array.push(c_boxes, box(na))
+            array.push(c_sideState, 0) 
+
+if not na(ph)
+    processPivot(ph, bar_index - pivotStrength)
+if not na(pl)
+    processPivot(pl, bar_index - pivotStrength)
+
+// ─────────────────────────────
+// ALERTS 
+// ─────────────────────────────
+bool alertBroken = false
+bool alertTouch  = false
+
+// Sync state array size
+if array.size(c_anchors) > array.size(c_sideState)
+    for i = array.size(c_sideState) to array.size(c_anchors) - 1
+        array.push(c_sideState, 0)
+
+if array.size(c_boxes) > 0
+    for i = 0 to array.size(c_boxes) - 1
+        box b = array.get(c_boxes, i)
+        if not na(b)
+            float top = box.get_top(b)
+            float bot = box.get_bottom(b)
+            int prevState = array.get(c_sideState, i)
+
+            // Logic: Only trigger if price crosses from one side to the other.
+            // Closing "Inside" changes the visual color but does NOT change the saved state.
+            
+            if close > top
+                // Trigger alert only if we were previously confirmed Below (-1)
+                if prevState == -1
+                    alertBroken := true
+                
+                // Update state to Above (1)
+                array.set(c_sideState, i, 1)
+                box.set_bgcolor(b, color.new(supColor, transpSR))
+                
+            else if close < bot
+                // Trigger alert only if we were previously confirmed Above (1)
+                if prevState == 1
+                    alertBroken := true
+                
+                // Update state to Below (-1)
+                array.set(c_sideState, i, -1)
+                box.set_bgcolor(b, color.new(resColor, transpSR))
+                
+            else 
+                // Price is currently inside the zone.
+                // We keep the prevState as it was (either 1 or -1) so we know where it came from.
+                box.set_bgcolor(b, color.new(midColor, transpSR))
+
+            // Alert Logic: Touches
+            if (high >= bot and high <= top) or (low <= top and low >= bot)
+                alertTouch := true
+
+// ─────────────────────────────
+// ALERT DEFINITIONS
+// ─────────────────────────────
+alertcondition(alertBroken, "Support or Resistance Broken", "Support or Resistance Broken")
+alertcondition(alertTouch,  "Support and Resistance Touches", "Support and Resistance Touches")

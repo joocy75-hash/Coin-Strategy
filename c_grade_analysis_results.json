@@ -1,0 +1,1305 @@
+[
+  {
+    "script_id": "AOTPWbpq-Pivot-Trend-ChartPrime",
+    "title": "Pivot Trend [ChartPrime]",
+    "author": "ChartPrime",
+    "current_score": 65.0,
+    "priority": 81.0,
+    "complexity": {
+      "score": 0,
+      "level": "LOW",
+      "factors": [],
+      "indicators": {
+        "easy": [
+          "sma",
+          "rsi",
+          "atr"
+        ],
+        "difficult": [],
+        "has_ta_lib": true,
+        "custom_functions": 4
+      },
+      "code_lines": 66
+    },
+    "improvement": {
+      "current_score": 65.0,
+      "conservative": 68.0,
+      "realistic": 70.0,
+      "optimistic": 73.0,
+      "reaches_b_grade": true,
+      "points_needed_for_b": 5.0
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "I0o8N7VW-Supply-and-Demand-Zones-BigBeluga",
+    "title": "Supply and Demand Zones [BigBeluga]",
+    "author": "BigBeluga",
+    "current_score": 65.0,
+    "priority": 81.0,
+    "complexity": {
+      "score": 0,
+      "level": "LOW",
+      "factors": [],
+      "indicators": {
+        "easy": [
+          "ema",
+          "rsi",
+          "atr"
+        ],
+        "difficult": [],
+        "has_ta_lib": true,
+        "custom_functions": 1
+      },
+      "code_lines": 162
+    },
+    "improvement": {
+      "current_score": 65.0,
+      "conservative": 68.0,
+      "realistic": 70.0,
+      "optimistic": 73.0,
+      "reaches_b_grade": true,
+      "points_needed_for_b": 5.0
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "x0pgNaRA-Support-and-Resistance",
+    "title": "Support and Resistance",
+    "author": "ebecihalil",
+    "current_score": 65.0,
+    "priority": 79.0,
+    "complexity": {
+      "score": 0,
+      "level": "LOW",
+      "factors": [],
+      "indicators": {
+        "easy": [
+          "rsi",
+          "atr"
+        ],
+        "difficult": [],
+        "has_ta_lib": true,
+        "custom_functions": 4
+      },
+      "code_lines": 147
+    },
+    "improvement": {
+      "current_score": 65.0,
+      "conservative": 68.0,
+      "realistic": 70.0,
+      "optimistic": 73.0,
+      "reaches_b_grade": true,
+      "points_needed_for_b": 5.0
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "dTBnHWe8-ATR-Normalized-VWMA-Deviation",
+    "title": "ATR-Normalized VWMA Deviation",
+    "author": "exploretranspose",
+    "current_score": 65.0,
+    "priority": 77.0,
+    "complexity": {
+      "score": 20,
+      "level": "LOW",
+      "factors": [
+        "Many custom functions: 7"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "rsi",
+          "atr",
+          "vwma"
+        ],
+        "difficult": [],
+        "has_ta_lib": true,
+        "custom_functions": 7
+      },
+      "code_lines": 92
+    },
+    "improvement": {
+      "current_score": 65.0,
+      "conservative": 68.0,
+      "realistic": 70.0,
+      "optimistic": 73.0,
+      "reaches_b_grade": true,
+      "points_needed_for_b": 5.0
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "TEST_STRATEGY_001",
+    "title": "Test Strategy for Verification",
+    "author": "Test Author",
+    "current_score": 65.0,
+    "priority": 77.0,
+    "complexity": {
+      "score": 0,
+      "level": "LOW",
+      "factors": [],
+      "indicators": {
+        "easy": [
+          "rsi"
+        ],
+        "difficult": [],
+        "has_ta_lib": false,
+        "custom_functions": 1
+      },
+      "code_lines": 2
+    },
+    "improvement": {
+      "current_score": 65.0,
+      "conservative": 68.0,
+      "realistic": 70.0,
+      "optimistic": 73.0,
+      "reaches_b_grade": true,
+      "points_needed_for_b": 5.0
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "ibJoSrFp-Power-Hour-Trendlines-LuxAlgo",
+    "title": "Power Hour Trendlines [LuxAlgo]",
+    "author": "LuxAlgo",
+    "current_score": 65.0,
+    "priority": 76.0,
+    "complexity": {
+      "score": 10,
+      "level": "LOW",
+      "factors": [
+        "Many custom functions: 6"
+      ],
+      "indicators": {
+        "easy": [
+          "rsi",
+          "mfi"
+        ],
+        "difficult": [],
+        "has_ta_lib": false,
+        "custom_functions": 6
+      },
+      "code_lines": 153
+    },
+    "improvement": {
+      "current_score": 65.0,
+      "conservative": 68.0,
+      "realistic": 70.0,
+      "optimistic": 73.0,
+      "reaches_b_grade": true,
+      "points_needed_for_b": 5.0
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "ETN2PyhG-Structure-Lite-Automatic-Major-Trend-Lines",
+    "title": "Structure Lite - Automatic Major Trend Lines",
+    "author": "GammaBulldog",
+    "current_score": 65.0,
+    "priority": 75.0,
+    "complexity": {
+      "score": 20,
+      "level": "LOW",
+      "factors": [
+        "Many custom functions: 7"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "ema",
+          "rsi"
+        ],
+        "difficult": [],
+        "has_ta_lib": true,
+        "custom_functions": 7
+      },
+      "code_lines": 104
+    },
+    "improvement": {
+      "current_score": 65.0,
+      "conservative": 68.0,
+      "realistic": 70.0,
+      "optimistic": 73.0,
+      "reaches_b_grade": true,
+      "points_needed_for_b": 5.0
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "z8gaWHWQ-Auto-Anchored-Fibonacci-Volume-Profile-Custom-Array-Engine",
+    "title": "Auto-Anchored Fibonacci Volume Profile [Custom Array Engine]",
+    "author": "KIRI7077",
+    "current_score": 65.0,
+    "priority": 70.0,
+    "complexity": {
+      "score": 30,
+      "level": "MEDIUM",
+      "factors": [
+        "Difficult indicators: ai"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "rsi"
+        ],
+        "difficult": [
+          "ai"
+        ],
+        "has_ta_lib": true,
+        "custom_functions": 2
+      },
+      "code_lines": 162
+    },
+    "improvement": {
+      "current_score": 65.0,
+      "conservative": 68.0,
+      "realistic": 70.0,
+      "optimistic": 73.0,
+      "reaches_b_grade": true,
+      "points_needed_for_b": 5.0
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "YKgJa5BY-S-R-Zones-Signals-V6-4-Rejection-Break",
+    "title": "S&R Zones + Signals V6.4 (Rejection & Break)",
+    "author": "dc910316",
+    "current_score": 61.2,
+    "priority": 69.2,
+    "complexity": {
+      "score": 10,
+      "level": "LOW",
+      "factors": [
+        "Many custom functions: 6"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "rsi",
+          "bollinger"
+        ],
+        "difficult": [],
+        "has_ta_lib": true,
+        "custom_functions": 6
+      },
+      "code_lines": 225
+    },
+    "improvement": {
+      "current_score": 61.2,
+      "conservative": 64.2,
+      "realistic": 66.2,
+      "optimistic": 69.2,
+      "reaches_b_grade": false,
+      "points_needed_for_b": 8.799999999999997
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "yEpX7uTv-Order-Blocks-Imbalance",
+    "title": "Order Blocks & Imbalance",
+    "author": "s3u1l",
+    "current_score": 58.8,
+    "priority": 66.8,
+    "complexity": {
+      "score": 0,
+      "level": "LOW",
+      "factors": [],
+      "indicators": {
+        "easy": [
+          "sma",
+          "ema",
+          "rsi",
+          "atr"
+        ],
+        "difficult": [],
+        "has_ta_lib": true,
+        "custom_functions": 3
+      },
+      "code_lines": 161
+    },
+    "improvement": {
+      "current_score": 58.8,
+      "conservative": 61.8,
+      "realistic": 63.8,
+      "optimistic": 66.8,
+      "reaches_b_grade": false,
+      "points_needed_for_b": 11.200000000000003
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "4sxu2wqP-TwinSmooth-ATR-Bands-QuantEdgeB",
+    "title": "TwinSmooth ATR Bands | QuantEdgeB",
+    "author": "QuantEdgeB",
+    "current_score": 58.8,
+    "priority": 65.8,
+    "complexity": {
+      "score": 10,
+      "level": "LOW",
+      "factors": [
+        "Many custom functions: 6"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "ema",
+          "rsi",
+          "atr",
+          "bollinger"
+        ],
+        "difficult": [],
+        "has_ta_lib": true,
+        "custom_functions": 6
+      },
+      "code_lines": 121
+    },
+    "improvement": {
+      "current_score": 58.8,
+      "conservative": 61.8,
+      "realistic": 63.8,
+      "optimistic": 66.8,
+      "reaches_b_grade": false,
+      "points_needed_for_b": 11.200000000000003
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "oOaiuY4l",
+    "title": "HaP MACD",
+    "author": "agahakanaga",
+    "current_score": 65.0,
+    "priority": 65.0,
+    "complexity": {
+      "score": 60,
+      "level": "HIGH",
+      "factors": [
+        "Many custom functions: 11"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "ema",
+          "rsi",
+          "macd"
+        ],
+        "difficult": [],
+        "has_ta_lib": true,
+        "custom_functions": 11
+      },
+      "code_lines": 100
+    },
+    "improvement": {
+      "current_score": 65.0,
+      "conservative": 68.0,
+      "realistic": 70.0,
+      "optimistic": 73.0,
+      "reaches_b_grade": true,
+      "points_needed_for_b": 5.0
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "74KI10jk-INSTITUTIONAL-VOLUME-PROFILE-FIBONACCI-ENHANCED-SIGNALS",
+    "title": "INSTITUTIONAL VOLUME PROFILE + FIBONACCI + ENHANCED SIGNALS",
+    "author": "Thecantillonreport",
+    "current_score": 62.8,
+    "priority": 63.8,
+    "complexity": {
+      "score": 40,
+      "level": "MEDIUM",
+      "factors": [
+        "Difficult indicators: ai",
+        "Medium code: 314 lines"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "rsi",
+          "cci",
+          "vwap"
+        ],
+        "difficult": [
+          "ai"
+        ],
+        "has_ta_lib": true,
+        "custom_functions": 3
+      },
+      "code_lines": 314
+    },
+    "improvement": {
+      "current_score": 62.8,
+      "conservative": 65.8,
+      "realistic": 67.8,
+      "optimistic": 70.8,
+      "reaches_b_grade": false,
+      "points_needed_for_b": 7.200000000000003
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "OkXH69ht-Interest-Zones",
+    "title": "Interest Zones",
+    "author": "s3u1l",
+    "current_score": 57.5,
+    "priority": 63.5,
+    "complexity": {
+      "score": 0,
+      "level": "LOW",
+      "factors": [],
+      "indicators": {
+        "easy": [
+          "sma",
+          "rsi",
+          "atr"
+        ],
+        "difficult": [],
+        "has_ta_lib": true,
+        "custom_functions": 3
+      },
+      "code_lines": 137
+    },
+    "improvement": {
+      "current_score": 57.5,
+      "conservative": 60.5,
+      "realistic": 62.5,
+      "optimistic": 65.5,
+      "reaches_b_grade": false,
+      "points_needed_for_b": 12.5
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "7P0rTnOQ-Supply-Demand-Zones-Volume-Based",
+    "title": "Supply & Demand Zones (Volume-Based)",
+    "author": "Market_Logic_India",
+    "current_score": 61.2,
+    "priority": 63.2,
+    "complexity": {
+      "score": 30,
+      "level": "MEDIUM",
+      "factors": [
+        "Difficult indicators: ai"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "ema",
+          "rsi"
+        ],
+        "difficult": [
+          "ai"
+        ],
+        "has_ta_lib": true,
+        "custom_functions": 1
+      },
+      "code_lines": 193
+    },
+    "improvement": {
+      "current_score": 61.2,
+      "conservative": 64.2,
+      "realistic": 66.2,
+      "optimistic": 69.2,
+      "reaches_b_grade": false,
+      "points_needed_for_b": 8.799999999999997
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "ylDJuP14-Precision-Trend-Scalping",
+    "title": "Precision Trend Scalping",
+    "author": "simpledistance18",
+    "current_score": 58.8,
+    "priority": 61.8,
+    "complexity": {
+      "score": 10,
+      "level": "LOW",
+      "factors": [
+        "Many custom functions: 6"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "ema",
+          "rsi"
+        ],
+        "difficult": [],
+        "has_ta_lib": true,
+        "custom_functions": 6
+      },
+      "code_lines": 67
+    },
+    "improvement": {
+      "current_score": 58.8,
+      "conservative": 61.8,
+      "realistic": 63.8,
+      "optimistic": 66.8,
+      "reaches_b_grade": false,
+      "points_needed_for_b": 11.200000000000003
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "h5TO1j8H-Pivot-Levels-BigBeluga",
+    "title": "Pivot Levels [BigBeluga]",
+    "author": "BigBeluga",
+    "current_score": 57.5,
+    "priority": 61.5,
+    "complexity": {
+      "score": 0,
+      "level": "LOW",
+      "factors": [],
+      "indicators": {
+        "easy": [
+          "rsi",
+          "atr"
+        ],
+        "difficult": [],
+        "has_ta_lib": true,
+        "custom_functions": 2
+      },
+      "code_lines": 110
+    },
+    "improvement": {
+      "current_score": 57.5,
+      "conservative": 60.5,
+      "realistic": 62.5,
+      "optimistic": 65.5,
+      "reaches_b_grade": false,
+      "points_needed_for_b": 12.5
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "PfLFiYz0-BulletProof-Long-Wick-Reversal-Markers-with-Lines",
+    "title": "BulletProof Long Wick Reversal Markers with Lines",
+    "author": "CapitalHoldings3M",
+    "current_score": 57.5,
+    "priority": 61.5,
+    "complexity": {
+      "score": 0,
+      "level": "LOW",
+      "factors": [],
+      "indicators": {
+        "easy": [
+          "sma",
+          "rsi"
+        ],
+        "difficult": [],
+        "has_ta_lib": true,
+        "custom_functions": 2
+      },
+      "code_lines": 56
+    },
+    "improvement": {
+      "current_score": 57.5,
+      "conservative": 60.5,
+      "realistic": 62.5,
+      "optimistic": 65.5,
+      "reaches_b_grade": false,
+      "points_needed_for_b": 12.5
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "LUsPP8in-Liquidity-Buy-Signal",
+    "title": "Liquidity Buy Signal",
+    "author": "StrategyLAB_",
+    "current_score": 65.0,
+    "priority": 61.0,
+    "complexity": {
+      "score": 60,
+      "level": "HIGH",
+      "factors": [
+        "Difficult indicators: ai",
+        "Many custom functions: 8"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "rsi"
+        ],
+        "difficult": [
+          "ai"
+        ],
+        "has_ta_lib": true,
+        "custom_functions": 8
+      },
+      "code_lines": 128
+    },
+    "improvement": {
+      "current_score": 65.0,
+      "conservative": 68.0,
+      "realistic": 70.0,
+      "optimistic": 73.0,
+      "reaches_b_grade": true,
+      "points_needed_for_b": 5.0
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "F7duegmG-Polynomial-Regression-Channel-ChartPrime",
+    "title": "Polynomial Regression Channel [ChartPrime]",
+    "author": "ChartPrime",
+    "current_score": 65.0,
+    "priority": 60.0,
+    "complexity": {
+      "score": 70,
+      "level": "HIGH",
+      "factors": [
+        "Difficult indicators: polynomial, ai",
+        "Many custom functions: 6"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "rsi",
+          "atr"
+        ],
+        "difficult": [
+          "polynomial",
+          "ai"
+        ],
+        "has_ta_lib": true,
+        "custom_functions": 6
+      },
+      "code_lines": 124
+    },
+    "improvement": {
+      "current_score": 65.0,
+      "conservative": 68.0,
+      "realistic": 70.0,
+      "optimistic": 73.0,
+      "reaches_b_grade": true,
+      "points_needed_for_b": 5.0
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "YUBXfhpq-SuperTrend-Weighted-by-Divergence",
+    "title": "SuperTrend Weighted by Divergence",
+    "author": "Uncle_the_shooter",
+    "current_score": 65.8,
+    "priority": 59.8,
+    "complexity": {
+      "score": 80,
+      "level": "HIGH",
+      "factors": [
+        "Difficult indicators: ai",
+        "Many custom functions: 10"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "ema",
+          "rsi",
+          "atr"
+        ],
+        "difficult": [
+          "ai"
+        ],
+        "has_ta_lib": true,
+        "custom_functions": 10
+      },
+      "code_lines": 184
+    },
+    "improvement": {
+      "current_score": 65.8,
+      "conservative": 68.8,
+      "realistic": 70.8,
+      "optimistic": 73.8,
+      "reaches_b_grade": true,
+      "points_needed_for_b": 4.200000000000003
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "RECXYo5O-Sideways-Zone-Breakout",
+    "title": "Sideways Zone Breakout",
+    "author": "AlgoVisionX",
+    "current_score": 65.0,
+    "priority": 58.0,
+    "complexity": {
+      "score": 70,
+      "level": "HIGH",
+      "factors": [
+        "Difficult indicators: ai",
+        "Many custom functions: 9"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "rsi"
+        ],
+        "difficult": [
+          "ai"
+        ],
+        "has_ta_lib": true,
+        "custom_functions": 9
+      },
+      "code_lines": 50
+    },
+    "improvement": {
+      "current_score": 65.0,
+      "conservative": 68.0,
+      "realistic": 70.0,
+      "optimistic": 73.0,
+      "reaches_b_grade": true,
+      "points_needed_for_b": 5.0
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "CYHksAle-SMA-MAD-Trend-Alpha-Extract",
+    "title": "SMA MAD Trend [Alpha Extract]",
+    "author": "AlphaExtract",
+    "current_score": 55.0,
+    "priority": 56.0,
+    "complexity": {
+      "score": 30,
+      "level": "MEDIUM",
+      "factors": [
+        "Many custom functions: 8"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "rsi",
+          "atr",
+          "bollinger",
+          "adx"
+        ],
+        "difficult": [],
+        "has_ta_lib": true,
+        "custom_functions": 8
+      },
+      "code_lines": 138
+    },
+    "improvement": {
+      "current_score": 55.0,
+      "conservative": 58.0,
+      "realistic": 60.0,
+      "optimistic": 63.0,
+      "reaches_b_grade": false,
+      "points_needed_for_b": 15.0
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "9SRsCCre-Trend-Stress-Quant-MarkitTick",
+    "title": "Trend Stress Quant [MarkitTick]",
+    "author": "MarkitTick",
+    "current_score": 58.8,
+    "priority": 55.8,
+    "complexity": {
+      "score": 30,
+      "level": "MEDIUM",
+      "factors": [
+        "Difficult indicators: ai"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "ema",
+          "rsi"
+        ],
+        "difficult": [
+          "ai"
+        ],
+        "has_ta_lib": true,
+        "custom_functions": 4
+      },
+      "code_lines": 259
+    },
+    "improvement": {
+      "current_score": 58.8,
+      "conservative": 61.8,
+      "realistic": 63.8,
+      "optimistic": 66.8,
+      "reaches_b_grade": false,
+      "points_needed_for_b": 11.200000000000003
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "S455PsIk-Algorithmic-Volume-Rejection-Zones-AVRZ",
+    "title": "Algorithmic Volume Rejection Zones [AVRZ]",
+    "author": "CandlesofKarma",
+    "current_score": 58.8,
+    "priority": 55.8,
+    "complexity": {
+      "score": 30,
+      "level": "MEDIUM",
+      "factors": [
+        "Difficult indicators: ai"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "ema",
+          "rsi"
+        ],
+        "difficult": [
+          "ai"
+        ],
+        "has_ta_lib": true,
+        "custom_functions": 5
+      },
+      "code_lines": 275
+    },
+    "improvement": {
+      "current_score": 58.8,
+      "conservative": 61.8,
+      "realistic": 63.8,
+      "optimistic": 66.8,
+      "reaches_b_grade": false,
+      "points_needed_for_b": 11.200000000000003
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "EtN6uzq9-Apex-Trend-Liquidity-Master-V2-1",
+    "title": "Apex Trend & Liquidity Master V2.1",
+    "author": "DarkPoolCrypto",
+    "current_score": 61.2,
+    "priority": 53.2,
+    "complexity": {
+      "score": 70,
+      "level": "HIGH",
+      "factors": [
+        "Difficult indicators: ai",
+        "Many custom functions: 9"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "ema",
+          "rsi",
+          "atr"
+        ],
+        "difficult": [
+          "ai"
+        ],
+        "has_ta_lib": true,
+        "custom_functions": 9
+      },
+      "code_lines": 228
+    },
+    "improvement": {
+      "current_score": 61.2,
+      "conservative": 64.2,
+      "realistic": 66.2,
+      "optimistic": 69.2,
+      "reaches_b_grade": false,
+      "points_needed_for_b": 8.799999999999997
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "lHtxK80h-Box-Theory-Interactive-Zones-PyraTime",
+    "title": "Box Theory [Interactive Zones] PyraTime",
+    "author": "PyraTime",
+    "current_score": 58.8,
+    "priority": 50.8,
+    "complexity": {
+      "score": 40,
+      "level": "MEDIUM",
+      "factors": [
+        "Difficult indicators: ai",
+        "Many custom functions: 6"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "rsi"
+        ],
+        "difficult": [
+          "ai"
+        ],
+        "has_ta_lib": true,
+        "custom_functions": 6
+      },
+      "code_lines": 124
+    },
+    "improvement": {
+      "current_score": 58.8,
+      "conservative": 61.8,
+      "realistic": 63.8,
+      "optimistic": 66.8,
+      "reaches_b_grade": false,
+      "points_needed_for_b": 11.200000000000003
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "gmtldsTf-cd-VW-Cx",
+    "title": "cd_VW_Cx",
+    "author": "cdikici71",
+    "current_score": 63.8,
+    "priority": 47.8,
+    "complexity": {
+      "score": 90,
+      "level": "HIGH",
+      "factors": [
+        "Difficult indicators: ai",
+        "Many custom functions: 11"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "rsi",
+          "vwap"
+        ],
+        "difficult": [
+          "ai"
+        ],
+        "has_ta_lib": true,
+        "custom_functions": 11
+      },
+      "code_lines": 233
+    },
+    "improvement": {
+      "current_score": 63.8,
+      "conservative": 66.8,
+      "realistic": 68.8,
+      "optimistic": 71.8,
+      "reaches_b_grade": false,
+      "points_needed_for_b": 6.200000000000003
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "K7DePdod-SD-Range-Oscillator-QuantEdgeB",
+    "title": "SD-Range Oscillator | QuantEdgeB",
+    "author": "QuantEdgeB",
+    "current_score": 58.8,
+    "priority": 45.8,
+    "complexity": {
+      "score": 70,
+      "level": "HIGH",
+      "factors": [
+        "Many custom functions: 12"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "ema",
+          "rsi",
+          "bollinger"
+        ],
+        "difficult": [],
+        "has_ta_lib": true,
+        "custom_functions": 12
+      },
+      "code_lines": 145
+    },
+    "improvement": {
+      "current_score": 58.8,
+      "conservative": 61.8,
+      "realistic": 63.8,
+      "optimistic": 66.8,
+      "reaches_b_grade": false,
+      "points_needed_for_b": 11.200000000000003
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "0E5xrn6O-Kalman-Hull-Kijun-BackQuant",
+    "title": "Kalman Hull Kijun [BackQuant]",
+    "author": "BackQuant",
+    "current_score": 65.0,
+    "priority": 37.0,
+    "complexity": {
+      "score": 140,
+      "level": "HIGH",
+      "factors": [
+        "Difficult indicators: kalman, ai",
+        "Many custom functions: 13"
+      ],
+      "indicators": {
+        "easy": [
+          "rsi",
+          "atr"
+        ],
+        "difficult": [
+          "kalman",
+          "ai"
+        ],
+        "has_ta_lib": true,
+        "custom_functions": 13
+      },
+      "code_lines": 116
+    },
+    "improvement": {
+      "current_score": 65.0,
+      "conservative": 68.0,
+      "realistic": 70.0,
+      "optimistic": 73.0,
+      "reaches_b_grade": true,
+      "points_needed_for_b": 5.0
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "z13zrDLw-FVG-Heatmap-Hash-Capital-Research",
+    "title": "FVG Heatmap [Hash Capital Research]",
+    "author": "Hash_Capital",
+    "current_score": 58.8,
+    "priority": 31.8,
+    "complexity": {
+      "score": 110,
+      "level": "HIGH",
+      "factors": [
+        "Difficult indicators: ai",
+        "Many custom functions: 12",
+        "Medium code: 456 lines"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "rsi",
+          "atr"
+        ],
+        "difficult": [
+          "ai"
+        ],
+        "has_ta_lib": true,
+        "custom_functions": 12
+      },
+      "code_lines": 456
+    },
+    "improvement": {
+      "current_score": 58.8,
+      "conservative": 61.8,
+      "realistic": 63.8,
+      "optimistic": 66.8,
+      "reaches_b_grade": false,
+      "points_needed_for_b": 11.200000000000003
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "KIAHUwBD",
+    "title": "HaP D-RSI",
+    "author": "agahakanaga",
+    "current_score": 56.2,
+    "priority": 30.2,
+    "complexity": {
+      "score": 100,
+      "level": "HIGH",
+      "factors": [
+        "Many custom functions: 15"
+      ],
+      "indicators": {
+        "easy": [
+          "ema",
+          "rsi"
+        ],
+        "difficult": [],
+        "has_ta_lib": true,
+        "custom_functions": 15
+      },
+      "code_lines": 105
+    },
+    "improvement": {
+      "current_score": 56.2,
+      "conservative": 59.2,
+      "realistic": 61.2,
+      "optimistic": 64.2,
+      "reaches_b_grade": false,
+      "points_needed_for_b": 13.799999999999997
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "cJDyAZ90",
+    "title": "Order Flow: Structural Sniper [Profile + Signals]",
+    "author": "br4ss",
+    "current_score": 57.8,
+    "priority": 25.8,
+    "complexity": {
+      "score": 140,
+      "level": "HIGH",
+      "factors": [
+        "Difficult indicators: ai",
+        "Many custom functions: 15",
+        "Medium code: 352 lines"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "ema",
+          "rsi",
+          "bollinger",
+          "vwap"
+        ],
+        "difficult": [
+          "ai"
+        ],
+        "has_ta_lib": true,
+        "custom_functions": 15
+      },
+      "code_lines": 352
+    },
+    "improvement": {
+      "current_score": 57.8,
+      "conservative": 60.8,
+      "realistic": 62.8,
+      "optimistic": 65.8,
+      "reaches_b_grade": false,
+      "points_needed_for_b": 12.200000000000003
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "31FxM7aE-ADX-Volatility-Waves-BOSWaves",
+    "title": "ADX Volatility Waves [BOSWaves]",
+    "author": "BOSWaves",
+    "current_score": 61.2,
+    "priority": 17.2,
+    "complexity": {
+      "score": 190,
+      "level": "HIGH",
+      "factors": [
+        "Many custom functions: 24"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "rsi",
+          "bollinger",
+          "adx"
+        ],
+        "difficult": [],
+        "has_ta_lib": true,
+        "custom_functions": 24
+      },
+      "code_lines": 277
+    },
+    "improvement": {
+      "current_score": 61.2,
+      "conservative": 64.2,
+      "realistic": 66.2,
+      "optimistic": 69.2,
+      "reaches_b_grade": false,
+      "points_needed_for_b": 8.799999999999997
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "qTp3HDzg-Adaptive-Z-Score-Oscillator-QuantAlgo",
+    "title": "Adaptive Z-Score Oscillator [QuantAlgo]",
+    "author": "QuantAlgo",
+    "current_score": 57.5,
+    "priority": 14.5,
+    "complexity": {
+      "score": 170,
+      "level": "HIGH",
+      "factors": [
+        "Difficult indicators: ai",
+        "Many custom functions: 19"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "ema",
+          "rsi",
+          "vwma"
+        ],
+        "difficult": [
+          "ai"
+        ],
+        "has_ta_lib": true,
+        "custom_functions": 19
+      },
+      "code_lines": 258
+    },
+    "improvement": {
+      "current_score": 57.5,
+      "conservative": 60.5,
+      "realistic": 62.5,
+      "optimistic": 65.5,
+      "reaches_b_grade": false,
+      "points_needed_for_b": 12.5
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "wvnP7tPF-Bollinger-Bands-Forecast-with-Signals-Zeiierman",
+    "title": "Bollinger Bands Forecast with Signals (Zeiierman)",
+    "author": "Zeiierman",
+    "current_score": 55.0,
+    "priority": 11.0,
+    "complexity": {
+      "score": 180,
+      "level": "HIGH",
+      "factors": [
+        "Difficult indicators: ai",
+        "Many custom functions: 19",
+        "Medium code: 432 lines"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "ema",
+          "rsi",
+          "atr",
+          "bollinger"
+        ],
+        "difficult": [
+          "ai"
+        ],
+        "has_ta_lib": true,
+        "custom_functions": 19
+      },
+      "code_lines": 432
+    },
+    "improvement": {
+      "current_score": 55.0,
+      "conservative": 58.0,
+      "realistic": 60.0,
+      "optimistic": 63.0,
+      "reaches_b_grade": false,
+      "points_needed_for_b": 15.0
+    },
+    "has_pine_code": true
+  },
+  {
+    "script_id": "SGwMtdqL",
+    "title": "Latent Energy Reactor [The_lurker]",
+    "author": "The_lurker",
+    "current_score": 55.2,
+    "priority": -4.8,
+    "complexity": {
+      "score": 220,
+      "level": "HIGH",
+      "factors": [
+        "Difficult indicators: ai",
+        "Many custom functions: 22",
+        "Long code: 616 lines"
+      ],
+      "indicators": {
+        "easy": [
+          "sma",
+          "rsi",
+          "atr"
+        ],
+        "difficult": [
+          "ai"
+        ],
+        "has_ta_lib": true,
+        "custom_functions": 22
+      },
+      "code_lines": 616
+    },
+    "improvement": {
+      "current_score": 55.2,
+      "conservative": 58.2,
+      "realistic": 60.2,
+      "optimistic": 63.2,
+      "reaches_b_grade": false,
+      "points_needed_for_b": 14.799999999999997
+    },
+    "has_pine_code": true
+  }
+]

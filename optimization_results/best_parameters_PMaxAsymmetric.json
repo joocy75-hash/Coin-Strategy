@@ -1,0 +1,19 @@
+{
+  "strategy_name": "PMaxAsymmetric",
+  "parameters": {
+    "atr_length": 14,
+    "upper_multiplier": 2.0,
+    "lower_multiplier": 3.0,
+    "ma_length": 10,
+    "ma_type": "EMA",
+    "stop_loss_percent": 5.0
+  },
+  "avg_return": 32.3158997808354,
+  "avg_sharpe": -0.005157494667970918,
+  "avg_win_rate": 36.2262034460585,
+  "avg_profit_factor": 1.110514248668109,
+  "avg_max_drawdown": 60.223124962596216,
+  "consistency_rate": 30.0,
+  "total_tests": 10,
+  "moon_dev_score": 0
+}

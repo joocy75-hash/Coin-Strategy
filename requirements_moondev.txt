@@ -1,0 +1,19 @@
+# Moon Dev Optimization Requirements
+# Install with: pip install -r requirements_moondev.txt
+
+# Core optimization
+optuna>=3.5.0
+
+# Data processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Backtesting
+backtesting>=0.3.3
+
+# Visualization (optional, for Optuna plots)
+plotly>=5.18.0
+matplotlib>=3.8.0
+
+# Progress bars
+tqdm>=4.66.0

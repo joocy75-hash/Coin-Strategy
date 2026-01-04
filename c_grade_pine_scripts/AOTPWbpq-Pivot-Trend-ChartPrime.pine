@@ -1,0 +1,66 @@
+// This Pine Script™ code is subject to the terms of the Mozilla Public License 2.0 at https://mozilla.org/MPL/2.0/
+// © ChartPrime
+
+//@version=6
+indicator('Pivot Trend [ChartPrime]', overlay = true)
+
+// 𝙐𝙎𝙀𝙍 𝙄𝙉𝙋𝙐𝙏𝙎
+int left_bars = input(10, 'Left Bars', group = 'Pivot Settings')
+int right_bars = input(10, 'Right Bars', group = 'Pivot Settings')
+float Offset = input.float(2, step = 0.01)
+
+
+// 𝙄𝙉𝘿𝙄𝘾𝘼𝙏𝙊𝙍 𝘾𝘼𝙇𝘾𝙐𝙇𝘼𝙏𝙄𝙊𝙉
+var float phy = na
+var float ply = na
+
+atr = ta.atr(200)
+
+p_high = ta.pivothigh(high + atr * Offset, left_bars, right_bars)
+p_low = ta.pivotlow(low - atr * Offset, left_bars, right_bars)
+
+if bool(p_high)
+    phy := p_high
+    phy
+
+if bool(p_low)
+    ply := p_low
+    ply
+
+// Trend 
+upperBand = phy
+lowerBand = ply
+
+prevLowerBand = nz(lowerBand[1])
+prevUpperBand = nz(upperBand[1])
+
+
+int trend = na
+float Trend = na
+prevTrend = Trend[1]
+
+if prevTrend == prevUpperBand
+    trend := close > upperBand ? 1 : -1
+    trend
+else
+    trend := close < lowerBand ? -1 : 1
+    trend
+Trend := trend == 1 ? lowerBand : trend == -1 ? upperBand : na
+
+
+// 𝙑𝙄𝙎𝙐𝘼𝙇𝙄𝙕𝘼𝙏𝙄𝙊𝙉
+//@ Signals
+color = trend == 1 ? color.blue : trend == -1 ? color.red : na
+plotchar(ta.crossover(trend, 0) ? Trend : na, 'Buy', '🅑', location.absolute, color.blue, size = size.small)
+plotchar(ta.crossunder(trend, 0) ? Trend : na, 'Sell', '🅢', location.absolute, color.red, size = size.small)
+//@ Pivot Trend
+upTrend = plot(trend < 0 ? Trend : na, 'Up Trend', color = color, style = plot.style_linebr)
+downTrend = plot(trend < 0 ? na : Trend, 'Down Trend', color = color, style = plot.style_linebr)
+
+p1 = plot(Trend, color = na)
+p2 = plot(hl2, color = na)
+fill(p1, p2, Trend, hl2, color.new(color, 85), color.new(color, 99))
+
+
+
+// 🅢 🅑

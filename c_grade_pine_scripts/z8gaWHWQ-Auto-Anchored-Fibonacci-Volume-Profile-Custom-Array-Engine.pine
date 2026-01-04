@@ -1,0 +1,162 @@
+//@version=6
+indicator("Fib Volume Profile", overlay=true, max_boxes_count=500, max_labels_count=50, max_lines_count=50)
+
+// --- Inputs ---
+lookbackLen = input.int(200, "Lookback Length", minval=50)
+rowCount = input.int(100, "Resolution (Row Count)", minval=20, maxval=200) 
+widthPct = input.int(40, "Width (% of Swing)", minval=10, maxval=200)
+extendLines = input.bool(true, "Extend Fib Lines")
+
+upColor = input.color(color.new(#00bcd4, 30), "Buy Volume (Teal)") 
+dnColor = input.color(color.new(#e91e63, 30), "Sell Volume (Red)") 
+pocColor = input.color(color.red, "POC Color")
+showLabels = input.bool(true, "Show Fib Labels")
+
+// --- GARBAGE COLLECTION ARRAYS ---
+// These hold references to all drawn objects so we can delete them later
+var box[] drawnBoxes = array.new_box(0)
+var line[] drawnLines = array.new_line(0)
+var label[] drawnLabels = array.new_label(0)
+
+// --- Helper: Draw Fib (Updated for Garbage Collection) ---
+drawFib(price, name, _color, startX, endX, _extend, _showLabels) =>
+    _style = line.style_solid
+    _ext = _extend ? extend.right : extend.none
+    // Create line and push to array
+    NewLine = line.new(startX, price, endX, price, color=_color, style=_style, extend=_ext)
+    array.push(drawnLines, NewLine)
+    
+    if _showLabels
+        // Create label and push to array
+        NewLabel = label.new(startX, price, text=name + " (" + str.tostring(price, format.mintick) + ")", 
+             style=label.style_none, textcolor=_color, size=size.small, textalign=text.align_left)
+        array.push(drawnLabels, NewLabel)
+
+// --- 1. Find Swing ---
+highestIndex = ta.highestbars(high, lookbackLen)
+lowestIndex = ta.lowestbars(low, lookbackLen)
+
+hiBar = bar_index + highestIndex
+loBar = bar_index + lowestIndex
+hiPrice = high[math.abs(highestIndex)]
+loPrice = low[math.abs(lowestIndex)]
+
+startBar = math.min(hiBar, loBar)
+endBar   = math.max(hiBar, loBar)
+swingRange = hiPrice - loPrice
+swingDuration = endBar - startBar
+
+vpMaxBars = int(math.max(10, swingDuration * (widthPct / 100.0)))
+
+// Fib Levels
+f0 = loPrice
+f236 = loPrice + (swingRange * 0.236)
+f382 = loPrice + (swingRange * 0.382)
+f500 = loPrice + (swingRange * 0.5)
+f618 = loPrice + (swingRange * 0.618)
+f786 = loPrice + (swingRange * 0.786)
+f100 = hiPrice
+
+// --- MAIN CALCULATION BLOCK ---
+if barstate.islast
+    // ============================================================
+    // GARBAGE COLLECTION STEP: Delete all old drawings first!
+    // ============================================================
+    if array.size(drawnBoxes) > 0
+        for i = 0 to array.size(drawnBoxes) - 1
+            box.delete(array.get(drawnBoxes, i))
+        array.clear(drawnBoxes)
+        
+    if array.size(drawnLines) > 0
+        for i = 0 to array.size(drawnLines) - 1
+            line.delete(array.get(drawnLines, i))
+        array.clear(drawnLines)
+        
+    if array.size(drawnLabels) > 0
+        for i = 0 to array.size(drawnLabels) - 1
+            label.delete(array.get(drawnLabels, i))
+        array.clear(drawnLabels)
+    // ============================================================
+
+
+    // --- 2. Process Volume (Smart Fill) ---
+    buyVolArray = array.new_float(rowCount, 0.0)
+    sellVolArray = array.new_float(rowCount, 0.0)
+    step = swingRange / rowCount
+    
+    for i = 0 to swingDuration
+        int offset = bar_index - (startBar + i)
+        if offset >= 0
+            float cHigh = high[offset]
+            float cLow = low[offset]
+            float v = volume[offset]
+            
+            if cHigh >= loPrice and cLow <= hiPrice
+                int botBin = math.floor((math.max(cLow, loPrice) - loPrice) / step)
+                int topBin = math.floor((math.min(cHigh, hiPrice) - loPrice) / step)
+                botBin := math.max(0, math.min(botBin, rowCount - 1))
+                topBin := math.max(0, math.min(topBin, rowCount - 1))
+                
+                int binsTouched = topBin - botBin + 1
+                float volPerBin = v / binsTouched
+                bool isUpCandle = close[offset] >= open[offset]
+                
+                for b = botBin to topBin
+                    if isUpCandle
+                        float current = array.get(buyVolArray, b)
+                        array.set(buyVolArray, b, current + volPerBin)
+                    else
+                        float current = array.get(sellVolArray, b)
+                        array.set(sellVolArray, b, current + volPerBin)
+
+    // Find Max Volume & POC
+    float maxTotalVol = 0.0
+    int pocIndex = 0
+    for i = 0 to rowCount - 1
+        float total = array.get(buyVolArray, i) + array.get(sellVolArray, i)
+        if total > maxTotalVol
+            maxTotalVol := total
+            pocIndex := i
+
+    // --- 3. Draw Profile (And store in arrays) ---
+    for i = 0 to rowCount - 1
+        float bVol = array.get(buyVolArray, i)
+        float sVol = array.get(sellVolArray, i)
+        float totalRow = bVol + sVol
+        
+        if totalRow > 0
+            float boxBottom = loPrice + (step * i)
+            float boxTop = loPrice + (step * (i+1)) + (step * 0.1) 
+            int buyWidth = int(vpMaxBars * (bVol / maxTotalVol))
+            int sellWidth = int(vpMaxBars * (sVol / maxTotalVol))
+            
+            if buyWidth > 0
+                // Draw and push to array
+                newBuyBox = box.new(startBar, boxTop, startBar + buyWidth, boxBottom, bgcolor=upColor, border_color=na)
+                array.push(drawnBoxes, newBuyBox)
+            
+            if sellWidth > 0
+                // Draw and push to array
+                newSellBox = box.new(startBar + buyWidth, boxTop, startBar + buyWidth + sellWidth, boxBottom, bgcolor=dnColor, border_color=na)
+                array.push(drawnBoxes, newSellBox)
+
+    // --- 4. Draw POC (And store in arrays) ---
+    float pocPrice = loPrice + (step * pocIndex) + (step / 2)
+    
+    pocLine = line.new(startBar, pocPrice, startBar + vpMaxBars + 20, pocPrice, color=pocColor, width=2)
+    array.push(drawnLines, pocLine)
+    
+    pocLabel = label.new(startBar + vpMaxBars + 20, pocPrice, text="POC", style=label.style_none, textcolor=pocColor, size=size.small)
+    array.push(drawnLabels, pocLabel)
+
+    // --- 5. Draw Fibs (Helper function handles array pushing) ---
+    drawFib(f0, "0.0", color.gray, startBar, bar_index, extendLines, showLabels)
+    drawFib(f236, "0.236", color.gray, startBar, bar_index, extendLines, showLabels)
+    drawFib(f382, "0.382", color.gray, startBar, bar_index, extendLines, showLabels)
+    drawFib(f500, "0.5", color.white, startBar, bar_index, extendLines, showLabels)
+    drawFib(f618, "0.618", color.yellow, startBar, bar_index, extendLines, showLabels)
+    drawFib(f786, "0.786", color.gray, startBar, bar_index, extendLines, showLabels)
+    drawFib(f100, "1.0", color.gray, startBar, bar_index, extendLines, showLabels)
+    
+    swingLine = line.new(hiBar, hiPrice, loBar, loPrice, color=color.white, style=line.style_dashed)
+    array.push(drawnLines, swingLine)

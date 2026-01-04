@@ -33,6 +33,7 @@ env/
 *.swo
 *.sublime-project
 *.sublime-workspace
+*~
 
 # Testing
 .pytest_cache/
@@ -47,13 +48,29 @@ htmlcov/
 .env.local
 .env.*.local
 *.env
+*.local.md
+
+# Cache
+.cache/
+*.cache
+
+# Data
+*.db
+*.sqlite
+*.sqlite3
+data/raw/*
+!data/raw/.gitkeep
+data/processed/*
+!data/processed/.gitkeep
+data/
 
 # Logs
 logs/
 *.log
 
-# Data (managed by Docker volumes)
-data/
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
 
 # OS
 .DS_Store
@@ -70,3 +87,24 @@ test-results/
 
 # Claude
 .claude/
+
+# Docker
+.dockerignore
+
+# Temporary
+tmp/
+temp/
+
+# API Keys
+*_api_key.txt
+credentials.json
+secrets/
+
+# Reports
+reports/*.html
+reports/*.pdf
+!reports/.gitkeep
+
+# Backtest Results
+backtest_results/
+!backtest_results/.gitkeep

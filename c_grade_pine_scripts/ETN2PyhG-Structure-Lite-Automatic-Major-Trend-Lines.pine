@@ -1,0 +1,104 @@
+// © GammaBulldog
+// v1.3: Strategic Uniqueness Update
+//@version=5
+indicator("Structure Lite v1.2 — Smart Volume & Break of Structure", overlay=true, max_lines_count=500)
+
+// === Inputs ===
+longN           = input.int(20, "Major Pivot Lookback", minval=2, tooltip="Bars to the left/right to confirm a structural pivot.")
+volThreshold    = input.float(1.5, "Volume Spike Factor", minval=1.0, tooltip="Breakouts must have volume X times higher than avg to be 'Smart Money'.")
+majorLineWidth  = input.int(2, "Line Thickness", minval=1)
+
+// Colors
+longResColor    = input.color(color.new(#f23645, 0), "Resistance/Supply")
+longSupColor    = input.color(color.new(#089981, 0), "Support/Demand")
+bosColor        = input.color(color.new(#2196f3, 0), "BOS Label Color")
+
+// Visibility
+showBOS         = input.bool(true, "Show Break of Structure (BOS)")
+hideAllTrends   = input.bool(false, "Hide All Lines")
+
+// === Array & Variable Management ===
+var line[] longUpLines = array.new_line() 
+var line[] longDnLines = array.new_line() 
+
+var float lastPivotHigh = na
+var float lastPivotLow  = na
+
+// === Volume Analysis ===
+avgVol = ta.sma(volume, 20)
+isHighVolume = volume > (avgVol * volThreshold)
+
+// === Drawing Function ===
+drawMajor(x2, y2, x1, y1, lineArray, recentColor) =>
+    if not hideAllTrends
+        ln = line.new(x1, y1, x2, y2, extend=extend.right, color=recentColor, width=majorLineWidth)
+        array.unshift(lineArray, ln)
+        if array.size(lineArray) > 3 // Keeps chart clean
+            line.delete(array.pop(lineArray))
+
+// === Market Structure Detection ===
+longPH = ta.pivothigh(high, longN, longN)
+longPL = ta.pivotlow(low, longN, longN)
+
+// Update Last Known Pivots
+if not na(longPH)
+    lastPivotHigh := longPH
+if not na(longPL)
+    lastPivotLow := low[longN]
+
+// Support Logic
+var int lIUp1 = na, var float lUp1 = na
+var int lIUp2 = na, var float lUp2 = na
+
+if not na(longPL)
+    lUp2 := lUp1, lIUp2 := lIUp1
+    lUp1 := low[longN]
+    lIUp1 := bar_index - longN
+    if not na(lUp2)
+        drawMajor(lIUp1, lUp1, lIUp2, lUp2, longUpLines, longSupColor)
+
+// Resistance Logic
+var int lIDn1 = na, var float lDn1 = na
+var int lIDn2 = na, var float lDn2 = na
+
+if not na(longPH)
+    lDn2 := lDn1, lIDn2 := lIDn1
+    lDn1 := high[longN]
+    lIDn1 := bar_index - longN
+    if not na(lDn2)
+        drawMajor(lIDn1, lDn1, lIDn2, lDn2, longDnLines, longResColor)
+
+// === Break of Structure (BOS) Logic ===
+// Detects when price closes above/below a major level with high volume
+bullishBOS = showBOS and ta.crossover(close, lastPivotHigh) and isHighVolume
+bearishBOS = showBOS and ta.crossunder(close, lastPivotLow) and isHighVolume
+
+// Reset pivots after a break to avoid repeat signals on same level
+if bullishBOS
+    lastPivotHigh := na
+if bearishBOS
+    lastPivotLow := na
+
+// Plotting BOS Signals
+plotshape(bullishBOS, "Bullish BOS", shape.labelup, location.belowbar, bosColor, text="BOS", textcolor=color.white, size=size.small)
+plotshape(bearishBOS, "Bearish BOS", shape.labeldown, location.abovebar, color.orange, text="BOS", textcolor=color.white, size=size.small)
+
+// === Alerts ===
+alertcondition(bullishBOS, "Bullish BOS", "Smart Money Bullish Breakout!")
+alertcondition(bearishBOS, "Bearish BOS", "Smart Money Bearish Breakout!")
+
+// --- MOMENTUM OVERLAY (GHOST RSI) ---
+showRSI = input.bool(true, "Show Momentum Overlay (Ghost RSI)", group="Momentum Settings")
+rsiLen  = input.int(14, "RSI Length", minval=1, group="Momentum Settings")
+rsiVal  = ta.rsi(close, rsiLen)
+
+// Find the high/low of price in the last 100 bars to scale the RSI correctly
+priceHigh  = ta.highest(high, 100)
+priceLow   = ta.lowest(low, 100)
+priceRange = priceHigh - priceLow
+
+// Normalize RSI (0-100) to the current price range on chart
+normalizedRSI = ((rsiVal / 100) * priceRange) + priceLow
+
+// Plot the Ghost Line (Transparent Gray)
+plot(showRSI ? normalizedRSI : na, "Ghost RSI", color=color.new(color.gray, 60), linewidth=1, style=plot.style_linebr)

@@ -1,0 +1,6 @@
+rank,script_id,title,score,indicators,pine_file
+1,YUBXfhpq-SuperTrend-Weighted-by-Divergence,SuperTrend Weighted by Divergence,65.8,"EMA, SMA, ATR",1_YUBXfhpq-SuperTrend-Weighted-by-Divergence.pine
+2,dTBnHWe8-ATR-Normalized-VWMA-Deviation,ATR-Normalized VWMA Deviation,65.0,"SMA, ATR",2_dTBnHWe8-ATR-Normalized-VWMA-Deviation.pine
+3,0E5xrn6O-Kalman-Hull-Kijun-BackQuant,Kalman Hull Kijun [BackQuant],65.0,ATR,3_0E5xrn6O-Kalman-Hull-Kijun-BackQuant.pine
+4,oOaiuY4l,HaP MACD,65.0,"EMA, SMA",4_oOaiuY4l.pine
+5,x0pgNaRA-Support-and-Resistance,Support and Resistance,65.0,ATR,5_x0pgNaRA-Support-and-Resistance.pine

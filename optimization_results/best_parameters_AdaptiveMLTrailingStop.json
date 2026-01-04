@@ -1,0 +1,20 @@
+{
+  "strategy_name": "AdaptiveMLTrailingStop",
+  "parameters": {
+    "kama_length": 20,
+    "atr_period": 28,
+    "base_multiplier": 2.5,
+    "fast_length": 15,
+    "slow_length": 50,
+    "adaptive_strength": 1.0,
+    "stop_loss_percent": 5.0
+  },
+  "avg_return": 23.24212986481866,
+  "avg_sharpe": 0.04838680557011483,
+  "avg_win_rate": 35.3045984629833,
+  "avg_profit_factor": 1.122121436944083,
+  "avg_max_drawdown": 57.247176247988726,
+  "consistency_rate": 50.0,
+  "total_tests": 10,
+  "moon_dev_score": 0
+}

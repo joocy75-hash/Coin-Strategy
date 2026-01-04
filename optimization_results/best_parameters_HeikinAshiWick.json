@@ -1,0 +1,14 @@
+{
+  "strategy_name": "HeikinAshiWick",
+  "parameters": {
+    "stop_loss_percent": 7.0
+  },
+  "avg_return": -82.26660415908377,
+  "avg_sharpe": -2.000963255917848,
+  "avg_win_rate": 33.56336867606833,
+  "avg_profit_factor": 0.8993030823919133,
+  "avg_max_drawdown": 87.77020371330796,
+  "consistency_rate": 0.0,
+  "total_tests": 10,
+  "moon_dev_score": 0
+}

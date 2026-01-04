@@ -1,0 +1,13 @@
+{
+  "best_score": -Infinity,
+  "best_params": null,
+  "optimization_date": "2026-01-04T07:07:06.402875",
+  "n_trials": 100,
+  "n_datasets": 25,
+  "moon_dev_targets": {
+    "sharpe": 1.5,
+    "win_rate": 40.0,
+    "profit_factor": 1.5,
+    "max_drawdown": -30.0
+  }
+}

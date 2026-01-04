@@ -1,0 +1,39 @@
+{
+  "total_score": 65.0,
+  "grade": "C",
+  "status": "review",
+  "repainting_score": 100,
+  "overfitting_score": 100,
+  "risk_score": 0,
+  "llm_score": 50,
+  "repainting_analysis": {
+    "risk_level": "NONE",
+    "issues": [],
+    "safe_patterns": [
+      "\uc774\uc804 \ubd09 \ub370\uc774\ud130 \uc0ac\uc6a9"
+    ]
+  },
+  "overfitting_analysis": {
+    "risk_level": "low",
+    "concerns": [],
+    "parameter_count": 0,
+    "magic_numbers": []
+  },
+  "risk_analysis": {
+    "risk_level": "critical",
+    "has_stop_loss": false,
+    "has_take_profit": false,
+    "has_position_sizing": false,
+    "concerns": [
+      "Stop Loss \ubbf8\uad6c\ud604",
+      "Take Profit \ubbf8\uad6c\ud604",
+      "\uace0\uc815 \uc218\ub7c9 \uc0ac\uc6a9 (\ub3d9\uc801 \ud3ec\uc9c0\uc158 \uc0ac\uc774\uc9d5 \uc5c6\uc74c)"
+    ],
+    "positives": [
+      "\ubcc0\ub3d9\uc131 \uae30\ubc18 \ud544\ud130"
+    ]
+  },
+  "llm_analysis": null,
+  "analyzed_at": "2026-01-04T04:19:33.518654",
+  "analysis_version": "1.0"
+}

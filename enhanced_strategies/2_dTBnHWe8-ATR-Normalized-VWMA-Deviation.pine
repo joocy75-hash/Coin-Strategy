@@ -1,0 +1,92 @@
+//@version=6
+indicator("ATR-Normalized VWMA Deviation", shorttitle = "ANVD", overlay=false)
+
+//────────────────────────────────────
+// INPUTS
+//────────────────────────────────────
+grp_calc   = "Core Calculations"
+grp_levels = "Signal Levels"
+grp_filter = "Optional Filters"
+
+// Lengths
+lookback = input.int(100, "Lookback (extremes)", minval=10, group=grp_calc)
+atr_len  = input.int(100, "ATR Length", minval=10, group=grp_calc)
+vwma_len = input.int(100, "VWMA Length", minval=10, group=grp_calc)
+
+// Levels
+upper_band = input.float(5.0, "Upper Deviation Band", group=grp_levels)
+lower_band = input.float(-5.0, "Lower Deviation Band", group=grp_levels)
+
+// Optional MAD filter
+use_mad = input.bool(false, "Use MAD filter", group=grp_filter)
+mad_mult = input.float(1.0, "MAD multiplier", step=0.1, group=grp_filter)
+
+//────────────────────────────────────
+// CORE CALCULATIONS
+//────────────────────────────────────
+
+// VWMA
+vwma = ta.vwma(ohlc4, vwma_len)
+
+// ATR-normalized deviation
+dev = (ohlc4 - vwma) / ta.atr(atr_len)
+
+// Mean Absolute Deviation (correct MAD)
+dev_mean = ta.sma(dev, lookback)
+mad = ta.sma(math.abs(dev - dev_mean), lookback)
+
+//────────────────────────────────────
+// EXTREME CONDITIONS
+//────────────────────────────────────
+
+// Deviation extremes
+is_highest_dev = dev > ta.highest(dev, lookback)[1]
+is_lowest_dev  = dev < ta.lowest(dev, lookback)[1]
+
+// Price extremes
+is_highest_price = high > ta.highest(high, lookback)[1]
+is_lowest_price  = low  < ta.lowest(low, lookback)[1]
+
+// Band filters
+above_upper = dev > upper_band
+below_lower = dev < lower_band
+
+// Optional MAD filter
+mad_ok_high = not use_mad or dev > mad * mad_mult
+mad_ok_low  = not use_mad or dev < -mad * mad_mult
+
+//────────────────────────────────────
+// CANDLE CONFIRMATION
+//────────────────────────────────────
+down_candle = close < open
+up_candle   = close > open
+
+//────────────────────────────────────
+// SIGNAL LOGIC
+//────────────────────────────────────
+
+// Raw confluence
+sell_setup = is_highest_dev and is_highest_price and above_upper and mad_ok_high
+buy_setup  = is_lowest_dev  and is_lowest_price  and below_lower and mad_ok_low
+
+// Entry confirmation (current or next bar)
+sell_signal = (sell_setup and down_candle) or (sell_setup[1] and down_candle)
+buy_signal  = (buy_setup  and up_candle)   or (buy_setup[1]  and up_candle)
+
+//────────────────────────────────────
+// VISUALS
+//────────────────────────────────────
+
+// Background signals
+bgcolor(sell_signal ? color.new(#F15156, 50)   : na, title="Sell Zone")
+bgcolor(buy_signal  ? color.new(#7FD1B9, 0) : na, title="Buy Zone")
+
+// Reference levels
+hline(0, "Zero", color=color.gray, linestyle=hline.style_dashed)
+h_up = hline(upper_band, "Upper Band", color=color.gray)
+h_dn = hline(lower_band, "Lower Band", color=color.gray)
+fill(h_up, h_dn, color=color.new(color.blue, 95), title="Deviation Range")
+
+// Plots
+plot(dev, title="ATR-Normalized Deviation", color=color.new(#1C3738, 0))
+plot(use_mad ? mad : na, title="MAD", color=color.new(#7D2E68, 0))
