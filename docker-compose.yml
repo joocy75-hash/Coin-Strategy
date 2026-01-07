@@ -20,6 +20,7 @@ services:
       - ./logs:/app/logs
     networks:
       - group_c_network
+      - proxy-net
     deploy:
       resources:
         limits:
@@ -29,7 +30,7 @@ services:
           cpus: '0.5'
           memory: 512M
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]  # 내부 포트는 그대로
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/api/health" ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -47,7 +48,7 @@ services:
       dockerfile: Dockerfile
     container_name: strategy-scheduler
     restart: always
-    command: ["python", "scripts/auto_collector_service.py"]
+    command: [ "python", "scripts/auto_collector_service.py" ]
     environment:
       - TZ=Asia/Seoul
       - PYTHONUNBUFFERED=1
@@ -77,4 +78,6 @@ services:
 
 networks:
   group_c_network:
+    driver: bridge
+  proxy-net:
     external: true
