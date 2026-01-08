@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Optional, List, Any
 from datetime import datetime
 
+import os
 from fastapi import FastAPI, Query, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -22,8 +23,10 @@ from pydantic import BaseModel, Field
 # Pydantic Models
 # ============================================================
 
+
 class StatsResponse(BaseModel):
     """통계 정보 응답"""
+
     total_strategies: int = Field(..., description="총 전략 수")
     analyzed_count: int = Field(..., description="분석 완료 수")
     passed_count: int = Field(..., description="권장 전략 수 (A, B 등급)")
@@ -32,6 +35,7 @@ class StatsResponse(BaseModel):
 
 class StrategyItem(BaseModel):
     """전략 목록 아이템"""
+
     script_id: str
     title: str
     author: str
@@ -44,6 +48,7 @@ class StrategyItem(BaseModel):
 
 class StrategyDetail(BaseModel):
     """전략 상세 정보"""
+
     script_id: str
     title: str
     author: str
@@ -69,7 +74,7 @@ app = FastAPI(
     version="1.1.0",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
-    openapi_url="/api/openapi.json"
+    openapi_url="/api/openapi.json",
 )
 
 # CORS 설정
@@ -82,22 +87,62 @@ app.add_middleware(
 )
 
 # 경로 설정 (Docker 컨테이너 환경 기준)
-import os
 BASE_DIR = Path(os.getenv("APP_BASE_DIR", "/app"))
 DB_PATH = BASE_DIR / "data" / "strategies.db"
 DATA_DIR = BASE_DIR / "data"
 
 
+def init_db():
+    """데이터베이스 초기화 (파일이 없는 경우)"""
+    if not DB_PATH.exists():
+        print(f"Initializing database at {DB_PATH}")
+        DB_PATH.parent.mkdir(parents=True, exist_ok=True)
+        conn = sqlite3.connect(str(DB_PATH))
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS strategies (
+                script_id TEXT PRIMARY KEY,
+                title TEXT NOT NULL,
+                author TEXT NOT NULL,
+                likes INTEGER DEFAULT 0,
+                views INTEGER DEFAULT 0,
+                pine_code TEXT,
+                pine_version INTEGER DEFAULT 5,
+                performance_json TEXT,
+                analysis_json TEXT,
+                script_url TEXT,
+                description TEXT,
+                is_open_source BOOLEAN DEFAULT 0,
+                category TEXT DEFAULT 'strategy',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_likes ON strategies(likes DESC)")
+        cur.execute("CREATE INDEX IF NOT EXISTS idx_author ON strategies(author)")
+        conn.commit()
+        conn.close()
+
+
+@app.on_event("startup")
+async def startup_event():
+    """서버 시작 시 초기화"""
+    init_db()
+
+
 def get_db():
     """데이터베이스 연결"""
     if not DB_PATH.exists():
+        init_db()
+
+    try:
+        conn = sqlite3.connect(str(DB_PATH))
+        conn.row_factory = sqlite3.Row
+        return conn
+    except sqlite3.Error as e:
         raise HTTPException(
-            status_code=500,
-            detail=f"Database not found: {DB_PATH}"
+            status_code=500, detail=f"Database connection error: {str(e)}"
         )
-    conn = sqlite3.connect(str(DB_PATH))
-    conn.row_factory = sqlite3.Row
-    return conn
 
 
 def parse_json_field(value: Any) -> Optional[dict]:
@@ -120,14 +165,14 @@ def extract_analysis_data(analysis_json: str) -> dict:
             "total_score": None,
             "grade": None,
             "repainting_score": None,
-            "overfitting_score": None
+            "overfitting_score": None,
         }
 
     return {
         "total_score": analysis.get("total_score"),
         "grade": analysis.get("grade"),
         "repainting_score": analysis.get("repainting_score"),
-        "overfitting_score": analysis.get("overfitting_score")
+        "overfitting_score": analysis.get("overfitting_score"),
     }
 
 
@@ -135,13 +180,14 @@ def extract_analysis_data(analysis_json: str) -> dict:
 # API Endpoints
 # ============================================================
 
+
 @app.get("/api/health")
 async def health_check():
     """헬스 체크"""
     return {
         "status": "healthy",
         "timestamp": datetime.now().isoformat(),
-        "database_exists": DB_PATH.exists()
+        "database_exists": DB_PATH.exists(),
     }
 
 
@@ -157,11 +203,15 @@ async def get_stats():
         total = cur.fetchone()[0]
 
         # analysis_json이 있는 항목 수 (분석 완료)
-        cur.execute("SELECT COUNT(*) FROM strategies WHERE analysis_json IS NOT NULL AND analysis_json != ''")
+        cur.execute(
+            "SELECT COUNT(*) FROM strategies WHERE analysis_json IS NOT NULL AND analysis_json != ''"
+        )
         analyzed = cur.fetchone()[0]
 
         # 모든 분석된 전략의 analysis_json 가져와서 통계 계산
-        cur.execute("SELECT analysis_json FROM strategies WHERE analysis_json IS NOT NULL AND analysis_json != ''")
+        cur.execute(
+            "SELECT analysis_json FROM strategies WHERE analysis_json IS NOT NULL AND analysis_json != ''"
+        )
         rows = cur.fetchall()
         conn.close()
 
@@ -174,7 +224,7 @@ async def get_stats():
             grade = data.get("grade")
             score = data.get("total_score")
 
-            if grade in ('A', 'B'):
+            if grade in ("A", "B"):
                 passed += 1
             if score is not None:
                 total_score_sum += score
@@ -186,7 +236,7 @@ async def get_stats():
             total_strategies=total,
             analyzed_count=analyzed,
             passed_count=passed,
-            avg_score=round(avg_score, 1)
+            avg_score=round(avg_score, 1),
         )
 
     except sqlite3.Error as e:
@@ -201,7 +251,7 @@ async def get_strategies(
     grade: Optional[str] = Query(None, description="등급 필터 (A, B, C, D, F)"),
     search: Optional[str] = Query(None, description="검색어 (제목, 작성자)"),
     sort_by: str = Query("likes", description="정렬 기준 (likes, title)"),
-    sort_order: str = Query("desc", description="정렬 순서 (asc, desc)")
+    sort_order: str = Query("desc", description="정렬 순서 (asc, desc)"),
 ):
     """전략 목록 조회"""
     try:
@@ -245,23 +295,27 @@ async def get_strategies(
             if grade and strategy_grade != grade:
                 continue
 
-            results.append(StrategyItem(
-                script_id=row["script_id"],
-                title=row["title"] or "",
-                author=row["author"] or "",
-                likes=row["likes"] or 0,
-                total_score=data.get("total_score"),
-                grade=strategy_grade,
-                repainting_score=data.get("repainting_score"),
-                overfitting_score=data.get("overfitting_score")
-            ))
+            results.append(
+                StrategyItem(
+                    script_id=row["script_id"],
+                    title=row["title"] or "",
+                    author=row["author"] or "",
+                    likes=row["likes"] or 0,
+                    total_score=data.get("total_score"),
+                    grade=strategy_grade,
+                    repainting_score=data.get("repainting_score"),
+                    overfitting_score=data.get("overfitting_score"),
+                )
+            )
 
         # 점수 기준 정렬 (클라이언트 요청 시)
         if sort_by == "score" or sort_by == "total_score":
-            results.sort(key=lambda x: x.total_score or 0, reverse=(sort_order.lower() == "desc"))
+            results.sort(
+                key=lambda x: x.total_score or 0, reverse=(sort_order.lower() == "desc")
+            )
 
         # 페이징
-        return results[offset:offset + limit]
+        return results[offset : offset + limit]
 
     except sqlite3.Error as e:
         raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
@@ -299,7 +353,7 @@ async def get_strategy_detail(script_id: str):
             pine_version=row["pine_version"],
             performance=performance,
             analysis=analysis,
-            created_at=row["created_at"]
+            created_at=row["created_at"],
         )
 
     except HTTPException:
@@ -311,6 +365,7 @@ async def get_strategy_detail(script_id: str):
 # ============================================================
 # Static Files & Main Page
 # ============================================================
+
 
 @app.get("/")
 async def serve_index():
@@ -334,8 +389,10 @@ async def serve_report():
 # Backtest Endpoints
 # ============================================================
 
+
 class BacktestRequest(BaseModel):
     """백테스트 요청"""
+
     script_id: str = Field(..., description="전략 ID")
     symbol: str = Field("BTC/USDT", description="거래쌍")
     timeframe: str = Field("1h", description="시간프레임")
@@ -346,6 +403,7 @@ class BacktestRequest(BaseModel):
 
 class BacktestResponse(BaseModel):
     """백테스트 응답"""
+
     success: bool
     script_id: str
     symbol: Optional[str] = None
@@ -363,6 +421,7 @@ async def run_backtest(request: BacktestRequest):
     Pine Script 전략을 Python으로 변환하고 과거 데이터로 백테스트합니다.
     """
     import sys
+
     sys.path.insert(0, str(BASE_DIR / "src"))
 
     try:
@@ -376,14 +435,12 @@ async def run_backtest(request: BacktestRequest):
             timeframe=request.timeframe,
             start_date=request.start_date,
             end_date=request.end_date,
-            initial_capital=request.initial_capital
+            initial_capital=request.initial_capital,
         )
 
-        if result.get('error'):
+        if result.get("error"):
             return BacktestResponse(
-                success=False,
-                script_id=request.script_id,
-                error=result['error']
+                success=False, script_id=request.script_id, error=result["error"]
             )
 
         return BacktestResponse(
@@ -391,8 +448,8 @@ async def run_backtest(request: BacktestRequest):
             script_id=request.script_id,
             symbol=request.symbol,
             timeframe=request.timeframe,
-            backtest=result.get('backtest'),
-            tested_at=result.get('tested_at')
+            backtest=result.get("backtest"),
+            tested_at=result.get("tested_at"),
         )
 
     except Exception as e:
@@ -405,7 +462,7 @@ async def run_all_backtests(
     symbol: str = Query("BTC/USDT", description="거래쌍"),
     timeframe: str = Query("1h", description="시간프레임"),
     start_date: str = Query("2024-01-01", description="시작일"),
-    end_date: str = Query("2024-06-01", description="종료일")
+    end_date: str = Query("2024-06-01", description="종료일"),
 ):
     """
     모든 전략 백테스트 (상위 N개)
@@ -413,6 +470,7 @@ async def run_all_backtests(
     Pine Script 코드가 있는 전략을 좋아요 순으로 정렬하여 백테스트합니다.
     """
     import sys
+
     sys.path.insert(0, str(BASE_DIR / "src"))
 
     try:
@@ -425,12 +483,14 @@ async def run_all_backtests(
             symbol=symbol,
             timeframe=timeframe,
             start_date=start_date,
-            end_date=end_date
+            end_date=end_date,
         )
 
         # 요약 통계
-        successful = [r for r in results if r.get('backtest', {}).get('success')]
-        total_return_sum = sum(r['backtest']['total_return'] for r in successful) if successful else 0
+        successful = [r for r in results if r.get("backtest", {}).get("success")]
+        total_return_sum = (
+            sum(r["backtest"]["total_return"] for r in successful) if successful else 0
+        )
         avg_return = total_return_sum / len(successful) if successful else 0
 
         return {
@@ -438,7 +498,7 @@ async def run_all_backtests(
             "successful": len(successful),
             "failed": len(results) - len(successful),
             "avg_return": round(avg_return, 2),
-            "results": results
+            "results": results,
         }
 
     except Exception as e:
@@ -452,7 +512,9 @@ async def get_backtest_result(script_id: str):
         conn = get_db()
         cur = conn.cursor()
 
-        cur.execute("SELECT analysis_json FROM strategies WHERE script_id = ?", [script_id])
+        cur.execute(
+            "SELECT analysis_json FROM strategies WHERE script_id = ?", [script_id]
+        )
         row = cur.fetchone()
         conn.close()
 
@@ -461,17 +523,17 @@ async def get_backtest_result(script_id: str):
 
         analysis = parse_json_field(row[0])
 
-        if not analysis or 'backtest_result' not in analysis:
+        if not analysis or "backtest_result" not in analysis:
             return {
                 "script_id": script_id,
                 "has_backtest": False,
-                "message": "No backtest result available. Run /api/backtest first."
+                "message": "No backtest result available. Run /api/backtest first.",
             }
 
         return {
             "script_id": script_id,
             "has_backtest": True,
-            "backtest_result": analysis['backtest_result']
+            "backtest_result": analysis["backtest_result"],
         }
 
     except HTTPException:
@@ -491,4 +553,5 @@ if DATA_DIR.exists():
 
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8080)

@@ -5,7 +5,7 @@
 set -e
 
 # 설정
-SERVER_IP="152.42.169.132"
+SERVER_IP="141.164.55.245"
 SERVER_USER="root"
 SERVER_PASS="Wnrkswl!23"
 PROJECT_DIR="/opt/strategy-research-lab"

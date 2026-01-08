@@ -1,7 +1,7 @@
 #!/bin/bash
 # 서버 상태 확인 스크립트
 
-SERVER_IP="152.42.169.132"
+SERVER_IP="141.164.55.245"
 SERVER_USER="root"
 SERVER_PASS="Wnrkswl!23"
 
