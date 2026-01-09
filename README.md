@@ -2,7 +2,7 @@
 
 **최종 업데이트**: 2026-01-04 21:20 KST
 **프로젝트 상태**: ✅ 운영 중 (Phase 1-3 완료, 44개 전략 수집/분석 완료)
-**서버 상태**: ✅ 정상 (http://5.161.112.248:8081)
+**서버 상태**: ✅ 정상 (http://141.164.55.245/api)
 
 > 📘 **완전 가이드**: [MASTER_GUIDE.md](MASTER_GUIDE.md) - 모든 정보가 통합된 완벽한 가이드 문서
 
@@ -143,7 +143,7 @@ TradingView에서 Pine Script 전략을 자동으로 수집 → AI 분석 → Py
 ### 서버 스펙
 | 항목 | 값 |
 |------|-----|
-| IP 주소 | 5.161.112.248 |
+| IP 주소 | 141.164.55.245 |
 | 위치 | Hetzner Cloud, Germany |
 | OS | Ubuntu 22.04 LTS |
 | 프로젝트 경로 | `/root/service_c/strategy-research-lab` |
@@ -163,7 +163,7 @@ TradingView에서 Pine Script 전략을 자동으로 수집 → AI 분석 → Py
 
 ### API 엔드포인트
 
-**Base URL**: `http://5.161.112.248:8081`
+**Base URL**: `http://141.164.55.245/api`
 
 | 엔드포인트 | 메소드 | 설명 |
 |-----------|--------|------|
@@ -203,7 +203,7 @@ git push origin main
 gh run watch
 
 # 6. 배포 완료 후 원격서버 확인
-curl http://5.161.112.248:8081/api/health
+curl http://141.164.55.245/api/health
 ```
 
 **상세 가이드**: [MASTER_GUIDE.md](MASTER_GUIDE.md#배포-가이드) 참조
@@ -212,7 +212,7 @@ curl http://5.161.112.248:8081/api/health
 
 ```bash
 # 서버 SSH 접속
-ssh root@5.161.112.248
+ssh root@141.164.55.245
 
 # Docker 컨테이너 상태 확인
 docker compose -f /root/service_c/strategy-research-lab/docker-compose.yml ps
@@ -414,7 +414,7 @@ docker compose restart scheduler
 3. **웹 대시보드 배포** (30분)
    - Nginx 설정 (정적 파일 서빙)
    - HTML 리포트 자동 갱신
-   - http://5.161.112.248:8081/ 접근 가능
+   - http://141.164.55.245/api/ 접근 가능
 
 ### 우선순위 중간
 
@@ -453,14 +453,14 @@ docker compose ps
 
 **증상**:
 ```bash
-curl http://5.161.112.248:8081/api/health
+curl http://141.164.55.245/api/health
 # (504 Gateway Timeout)
 ```
 
 **해결**:
 ```bash
 # 컨테이너 재시작
-ssh root@5.161.112.248
+ssh root@141.164.55.245
 docker compose -f /root/service_c/strategy-research-lab/docker-compose.yml restart strategy-lab
 
 # 포트 확인
@@ -527,16 +527,16 @@ docker start strategy-scheduler
 
 ```bash
 # 헬스체크
-curl http://5.161.112.248:8081/api/health
+curl http://141.164.55.245/api/health
 
 # 통계
-curl http://5.161.112.248:8081/api/stats
+curl http://141.164.55.245/api/api/stats
 
 # A등급 전략 조회
-curl "http://5.161.112.248:8081/api/strategies?grade=A&limit=10"
+curl "http://141.164.55.245/api/api/strategies?grade=A&limit=10"
 
 # API 문서 (브라우저)
-open http://5.161.112.248:8081/api/docs
+open http://141.164.55.245/api/api/docs
 ```
 
 ### Git 작업 명령어
@@ -608,9 +608,9 @@ docker compose up -d
 ## 연락처 및 문서
 
 ### 주요 링크
-- **API 문서**: http://5.161.112.248:8081/api/docs
+- **API 문서**: http://141.164.55.245/api/api/docs
 - **GitHub**: (설정 필요)
-- **서버**: ssh root@5.161.112.248
+- **서버**: ssh root@141.164.55.245
 
 ### 추가 문서
 - **배포 가이드**: 핵심.md
