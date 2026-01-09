@@ -125,8 +125,8 @@ class Config:
     """거래 설정 - 실전 거래 전 반드시 수정!"""
 
     # ⚠️ API 키 (반드시 본인 키로 교체!)
-    API_KEY: str = "YOUR_BITGET_API_KEY"
-    API_SECRET: str = "YOUR_BITGET_API_SECRET"
+    API_KEY: str = "YOUR_BINANCE_API_KEY"
+    API_SECRET: str = "YOUR_BINANCE_API_SECRET"
 
     # 거래 설정
     SYMBOL: str = "BTC/USDT"
@@ -151,7 +151,7 @@ class Config:
     RSI_OVERSOLD: float = 30.0
 
     # 거래소 설정
-    EXCHANGE: str = "bitget"
+    EXCHANGE: str = "binance"
     USE_TESTNET: bool = True         # ⚠️ 실전 거래 시 False로 변경
 
     # 봇 설정
@@ -470,7 +470,7 @@ class TradingStrategy:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 class ExchangeConnector:
-    """Bitget 거래소 API 연동"""
+    """Binance 거래소 API 연동"""
 
     def __init__(self, config: Config):
         self.config = config
@@ -482,13 +482,12 @@ class ExchangeConnector:
         if not CCXT_AVAILABLE:
             raise ImportError("ccxt 라이브러리가 필요합니다: pip install ccxt")
 
-        self.exchange = ccxt.bitget({{
+        self.exchange = ccxt.binance({{
             'apiKey': self.config.API_KEY,
             'secret': self.config.API_SECRET,
-            'password': self.config.API_PASSWORD if hasattr(self.config, 'API_PASSWORD') else '',
             'enableRateLimit': True,
             'options': {{
-                'defaultType': 'swap',
+                'defaultType': 'future',
                 'adjustForTimeDifference': True,
             }}
         }})
@@ -606,7 +605,7 @@ class TradingBot:
             position_value = risk_amount / (self.config.STOP_LOSS_PCT / 100)
             position_size = position_value / current_price
 
-            # 소수점 4자리로 반올림 (Bitget 최소 단위)
+            # 소수점 4자리로 반올림 (Binance 최소 단위)
             return float(Decimal(str(position_size)).quantize(Decimal('0.0001'), rounding=ROUND_DOWN))
 
         except Exception as e:
@@ -770,11 +769,11 @@ async def main():
         print("║  2. USE_TESTNET = True 상태로 테스트넷에서 테스트                 ║")
         print("║  3. 충분한 테스트 후 USE_TESTNET = False로 실전 거래              ║")
         print("║                                                                  ║")
-        print("║  Bitget API 키 발급:                                             ║")
-        print("║  https://www.bitget.com/en/account/api                           ║")
+        print("║  Binance API 키 발급:                                            ║")
+        print("║  https://www.binance.com/en/my/settings/api-management           ║")
         print("║                                                                  ║")
-        print("║  Bitget 테스트넷:                                                ║")
-        print("║  https://testnet.bitget.com                                      ║")
+        print("║  Binance Futures 테스트넷:                                       ║")
+        print("║  https://testnet.binancefuture.com                               ║")
         print("║                                                                  ║")
         print("╚══════════════════════════════════════════════════════════════════╝")
         print()

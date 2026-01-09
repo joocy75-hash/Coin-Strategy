@@ -1,6 +1,6 @@
 """
-Bitget OHLCV data collector for backtesting.
-(Changed from Binance due to US region restrictions)
+Binance OHLCV data collector for backtesting.
+(Changed back to Binance - Korea server now available)
 """
 
 import ccxt
@@ -15,23 +15,23 @@ import json
 logger = logging.getLogger(__name__)
 
 
-class BitgetDataCollector:
-    """Collects and caches OHLCV data from Bitget exchange."""
+class BinanceDataCollector:
+    """Collects and caches OHLCV data from Binance exchange."""
 
     SUPPORTED_TIMEFRAMES = ["1m", "5m", "15m", "30m", "1h", "4h", "1d", "1w"]
     MAX_CANDLES_PER_REQUEST = 1000
 
     def __init__(self, cache_dir: str = "data/market_data"):
-        """Initialize Bitget data collector."""
+        """Initialize Binance data collector."""
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
 
-        self.exchange = ccxt.bitget({
+        self.exchange = ccxt.binance({
             'enableRateLimit': True,
             'options': {'defaultType': 'spot'}
         })
 
-        logger.info(f"BitgetDataCollector initialized with cache dir: {self.cache_dir}")
+        logger.info(f"BinanceDataCollector initialized with cache dir: {self.cache_dir}")
 
     async def fetch_ohlcv(
         self,
@@ -199,11 +199,11 @@ class BitgetDataCollector:
                 pass  # Some exchanges don't support close
 
 
-class SyncBitgetDataCollector:
-    """Synchronous wrapper for BitgetDataCollector."""
+class SyncBinanceDataCollector:
+    """Synchronous wrapper for BinanceDataCollector."""
 
     def __init__(self, cache_dir: str = "data/market_data"):
-        self.collector = BitgetDataCollector(cache_dir)
+        self.collector = BinanceDataCollector(cache_dir)
 
     def fetch_ohlcv(self, symbol: str, timeframe: str, start_date: str, end_date: str, force_refresh: bool = False) -> pd.DataFrame:
         return asyncio.run(self.collector.fetch_ohlcv(symbol, timeframe, start_date, end_date, force_refresh))
@@ -221,6 +221,6 @@ class SyncBitgetDataCollector:
         return self.collector.clear_cache(symbol, timeframe)
 
 
-# Backward compatibility aliases
-BinanceDataCollector = BitgetDataCollector
-SyncBinanceDataCollector = SyncBitgetDataCollector
+# Backward compatibility aliases (for code using old names)
+BitgetDataCollector = BinanceDataCollector
+SyncBitgetDataCollector = SyncBinanceDataCollector

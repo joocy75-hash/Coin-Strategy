@@ -127,7 +127,7 @@ class StrategyTester:
         """시장 데이터 가져오기"""
         try:
             import ccxt
-            exchange = ccxt.bitget({'enableRateLimit': True, 'options': {'defaultType': 'spot'}})
+            exchange = ccxt.binance({'enableRateLimit': True, 'options': {'defaultType': 'spot'}})
             start_ts = int(datetime.fromisoformat(start_date).timestamp() * 1000)
             end_ts = int(datetime.fromisoformat(end_date).timestamp() * 1000)
 

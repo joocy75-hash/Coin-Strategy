@@ -79,7 +79,7 @@ class TelegramNotifier:
 ⏰ 시작 시간: {now}
 📊 수집 주기: 6시간마다
 🎯 목표: 100개 전략 (500+ 부스트)
-📈 백테스트: Bitget BTC/USDT 1H
+📈 백테스트: Binance BTC/USDT 1H
 
 <i>24시간 자동 수집이 시작되었습니다.</i>
 """
