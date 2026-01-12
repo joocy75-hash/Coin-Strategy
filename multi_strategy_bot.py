@@ -4,6 +4,8 @@ TOP 3 전략 멀티봇 시스템
 - API에서 상위 3개 전략 자동 선별
 - 전략별 독립 봇 인스턴스 운영
 - 더 좋은 전략 수집 시 자동 교체
+- SecureAPIManager 통합 (암호화된 API 키 관리)
+- LiveTradingSafeguards 통합 (실전매매 안전장치)
 """
 
 import asyncio
@@ -32,6 +34,22 @@ try:
     load_dotenv()
 except ImportError:
     pass
+
+# SecureAPIManager 통합
+try:
+    from encrypted_api_manager import get_api_manager, SecureAPIManager
+    SECURE_API_AVAILABLE = True
+except ImportError:
+    SECURE_API_AVAILABLE = False
+    print("Warning: encrypted_api_manager not available. Using env variables.")
+
+# LiveTradingSafeguards 통합
+try:
+    from src.trading.live_safeguards import get_safeguards, LiveTradingSafeguards, SafeguardConfig
+    SAFEGUARDS_AVAILABLE = True
+except ImportError:
+    SAFEGUARDS_AVAILABLE = False
+    print("Warning: live_safeguards not available. Running without safeguards.")
 
 # 로깅 설정
 logging.basicConfig(
@@ -67,9 +85,9 @@ class Config:
     TOP_N_STRATEGIES: int = 3
     STRATEGY_CHECK_INTERVAL: int = 3600  # 1시간마다 새 전략 체크
 
-    # Binance API
-    API_KEY: str = field(default_factory=lambda: os.getenv('BINANCE_API_KEY', ''))
-    API_SECRET: str = field(default_factory=lambda: os.getenv('BINANCE_API_SECRET', ''))
+    # Binance API - SecureAPIManager 우선 사용
+    API_KEY: str = field(default_factory=lambda: Config._get_api_key())
+    API_SECRET: str = field(default_factory=lambda: Config._get_api_secret())
 
     # 거래 설정
     SYMBOL: str = "BTC/USDT"
@@ -91,6 +109,38 @@ class Config:
     # 텔레그램
     TELEGRAM_BOT_TOKEN: str = field(default_factory=lambda: os.getenv('TELEGRAM_BOT_TOKEN', ''))
     TELEGRAM_CHAT_ID: str = field(default_factory=lambda: os.getenv('TELEGRAM_CHAT_ID', ''))
+    
+    @staticmethod
+    def _get_api_key() -> str:
+        """SecureAPIManager 또는 환경변수에서 API 키 로드"""
+        if SECURE_API_AVAILABLE:
+            manager = get_api_manager()
+            # 1. 암호화된 저장소에서 먼저 시도
+            creds = manager.load_credentials("binance")
+            if creds:
+                logger.info(f"API Key loaded from secure storage: {manager.mask_key(creds.api_key)}")
+                return creds.api_key
+            # 2. 환경변수에서 로드
+            creds = manager.get_from_env("binance")
+            if creds:
+                logger.info(f"API Key loaded from env: {manager.mask_key(creds.api_key)}")
+                return creds.api_key
+        return os.getenv('BINANCE_API_KEY', '')
+    
+    @staticmethod
+    def _get_api_secret() -> str:
+        """SecureAPIManager 또는 환경변수에서 API Secret 로드"""
+        if SECURE_API_AVAILABLE:
+            manager = get_api_manager()
+            # 1. 암호화된 저장소에서 먼저 시도
+            creds = manager.load_credentials("binance")
+            if creds and creds.api_secret:
+                return creds.api_secret
+            # 2. 환경변수에서 로드
+            creds = manager.get_from_env("binance")
+            if creds and creds.api_secret:
+                return creds.api_secret
+        return os.getenv('BINANCE_API_SECRET', '')
 
 
 @dataclass
@@ -402,7 +452,7 @@ class ExchangeConnector:
 
 
 class MultiStrategyBot:
-    """TOP 3 전략 멀티봇 시스템"""
+    """TOP 3 전략 멀티봇 시스템 (안전장치 통합)"""
 
     def __init__(self, config: Config = None):
         self.config = config or Config()
@@ -414,6 +464,13 @@ class MultiStrategyBot:
         self.stats: Dict[str, StrategyStats] = {}
         self.running = False
         self.last_strategy_check = datetime.now()
+        
+        # LiveTradingSafeguards 통합
+        self.safeguards: Optional[LiveTradingSafeguards] = None
+        if SAFEGUARDS_AVAILABLE:
+            initial_balance = self.config.CAPITAL_PER_STRATEGY * self.config.TOP_N_STRATEGIES
+            self.safeguards = get_safeguards(initial_balance=initial_balance)
+            logger.info(f"안전장치 활성화 (초기 자본: ${initial_balance:,.2f})")
 
     async def initialize(self):
         """시스템 초기화"""
@@ -441,12 +498,24 @@ class MultiStrategyBot:
         balance = await self.exchange.get_balance()
         logger.info(f"USDT 잔고: ${balance:,.2f}")
         logger.info(f"전략당 자본: ${self.config.CAPITAL_PER_STRATEGY:,.2f}")
+        
+        # 안전장치 시작
+        if self.safeguards:
+            if self.safeguards.start():
+                logger.info("✅ 안전장치 활성화됨")
+                status = self.safeguards.get_status()
+                logger.info(f"   - 일일 손실 제한: {status['limits']['daily_loss_limit_percent']}%")
+                logger.info(f"   - 최대 드로다운: {status['limits']['max_drawdown_percent']}%")
+                logger.info(f"   - 연속 손실 제한: {status['limits']['max_consecutive_losses']}회")
+            else:
+                logger.warning("⚠️ 안전장치 시작 실패 (긴급 정지 상태일 수 있음)")
 
         await self.notifier.send(
             f"🚀 <b>TOP 3 멀티봇 시작</b>\n\n"
             f"활성 전략:\n" +
             "\n".join([f"• {s.title} ({s.score}점)" for s in self.strategy_manager.current_strategies.values()]) +
-            f"\n\n잔고: ${balance:,.2f}"
+            f"\n\n잔고: ${balance:,.2f}" +
+            (f"\n\n🛡️ 안전장치: 활성화" if self.safeguards else "")
         )
 
         return True
@@ -501,8 +570,15 @@ class MultiStrategyBot:
             logger.info(f"[{strategy_id[:8]}] 포지션 청산: {reason}")
 
     async def process_strategy(self, strategy: StrategyInfo):
-        """개별 전략 처리"""
+        """개별 전략 처리 (안전장치 통합)"""
         try:
+            # 안전장치 체크
+            if self.safeguards:
+                can_trade, reason = self.safeguards.can_trade()
+                if not can_trade:
+                    logger.warning(f"[{strategy.title[:20]}] 거래 불가: {reason}")
+                    return
+            
             candles = await self.exchange.get_candles(self.config.SYMBOL, self.config.CANDLE_LIMIT)
             position = self.positions.get(strategy.script_id)
 
@@ -524,6 +600,14 @@ class MultiStrategyBot:
             if action == 'buy' and (not position or position.side == PositionSide.NONE):
                 balance = self.config.CAPITAL_PER_STRATEGY
                 size = (balance * 0.95) / price  # 95% 사용
+                
+                # 안전장치: 포지션 크기 체크
+                if self.safeguards:
+                    is_valid, msg, adjusted_size = self.safeguards.check_position_size(size, price)
+                    if not is_valid:
+                        logger.warning(f"[{strategy.title[:20]}] 포지션 조정: {msg}")
+                        size = adjusted_size
+                
                 size = float(Decimal(str(size)).quantize(Decimal('0.001'), rounding=ROUND_DOWN))
 
                 if size > 0:
@@ -551,6 +635,14 @@ class MultiStrategyBot:
             elif action == 'sell' and (not position or position.side == PositionSide.NONE):
                 balance = self.config.CAPITAL_PER_STRATEGY
                 size = (balance * 0.95) / price
+                
+                # 안전장치: 포지션 크기 체크
+                if self.safeguards:
+                    is_valid, msg, adjusted_size = self.safeguards.check_position_size(size, price)
+                    if not is_valid:
+                        logger.warning(f"[{strategy.title[:20]}] 포지션 조정: {msg}")
+                        size = adjusted_size
+                
                 size = float(Decimal(str(size)).quantize(Decimal('0.001'), rounding=ROUND_DOWN))
 
                 if size > 0:
@@ -581,13 +673,20 @@ class MultiStrategyBot:
 
                 if order:
                     pnl = signal.get('pnl_percent', 0)
+                    pnl_amount = (pnl / 100) * (position.entry_price * position.size)
+                    
                     stats = self.stats[strategy.script_id]
                     stats.total_pnl += pnl
-                    if pnl > 0:
+                    is_win = pnl > 0
+                    if is_win:
                         stats.wins += 1
                     else:
                         stats.losses += 1
                     stats.last_trade = datetime.now()
+                    
+                    # 안전장치: 거래 결과 기록
+                    if self.safeguards:
+                        self.safeguards.record_trade(pnl=pnl_amount, is_win=is_win)
 
                     del self.positions[strategy.script_id]
 
@@ -640,6 +739,12 @@ class MultiStrategyBot:
         """시스템 종료"""
         logger.info("시스템 종료 중...")
         self.running = False
+        
+        # 안전장치 정지
+        if self.safeguards:
+            self.safeguards.stop()
+            status = self.safeguards.get_status()
+            logger.info(f"안전장치 상태: {status['metrics']}")
 
         # 통계 출력
         logger.info("\n=== 전략별 성과 ===")
@@ -659,6 +764,29 @@ class MultiStrategyBot:
         await self.exchange.close()
         await self.notifier.send("🛑 TOP 3 멀티봇 종료")
         logger.info("시스템 종료 완료")
+    
+    # ============================================================
+    # 긴급 정지 메서드 (외부 호출용)
+    # ============================================================
+    
+    def emergency_stop(self, reason: str = "Manual emergency stop"):
+        """긴급 정지"""
+        if self.safeguards:
+            self.safeguards.emergency_stop(reason)
+            logger.warning(f"🚨 긴급 정지 활성화: {reason}")
+        self.running = False
+    
+    def reset_emergency_stop(self):
+        """긴급 정지 해제"""
+        if self.safeguards:
+            self.safeguards.reset_emergency_stop()
+            logger.info("긴급 정지 해제됨")
+    
+    def get_safeguard_status(self) -> Optional[Dict]:
+        """안전장치 상태 조회"""
+        if self.safeguards:
+            return self.safeguards.get_status()
+        return None
 
 
 async def main():

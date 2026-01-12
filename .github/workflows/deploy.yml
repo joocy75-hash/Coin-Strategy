@@ -108,8 +108,8 @@ jobs:
       - name: Send Telegram Notification
         if: always()
         env:
-          TELEGRAM_BOT_TOKEN: 8327452496:AAFwrVohBY-9dVoo8D7mXHqGLEDXMOCJK_M
-          TELEGRAM_CHAT_ID: 7980845952
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         run: |
           STATUS="${{ job.status }}"
           if [ "$STATUS" = "success" ]; then

@@ -47,9 +47,13 @@ tenacity>=8.2.0  # Retry logic
 # Web Framework (API Server)
 fastapi>=0.109.0
 uvicorn[standard]>=0.27.0
+slowapi>=0.1.9  # Rate Limiting
 
 # Anthropic Claude SDK
 anthropic>=0.40.0
+
+# Security & Encryption
+cryptography>=42.0.0
 
 # Development & Testing (optional)
 pytest>=7.4.0
