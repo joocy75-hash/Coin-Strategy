@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Strategy Research Lab - 대시보드</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg-primary: #0d1117;
+            --bg-secondary: #161b22;
+            --bg-tertiary: #21262d;
+            --border-color: #30363d;
+            --text-primary: #c9d1d9;
+            --text-secondary: #8b949e;
+            --accent-blue: #58a6ff;
+            --accent-green: #3fb950;
+            --accent-yellow: #d29922;
+            --accent-red: #f85149;
+            --accent-purple: #bc8cff;
+            --accent-orange: #f0883e;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', Helvetica, Arial, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        header {
+            background: var(--bg-secondary);
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        h1 { font-size: 1.8rem; font-weight: 600; color: var(--accent-blue); }
+        .subtitle { color: var(--text-secondary); font-size: 0.95rem; margin-top: 5px; }
+        .nav-links { display: flex; gap: 15px; }
+        .nav-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+        .nav-links a:hover { background: var(--bg-tertiary); color: var(--accent-blue); }
+        .nav-links a.active { background: var(--accent-blue); color: #000; }
+
+        /* 통계 그리드 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: var(--bg-secondary);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        .stat-card:hover {
+            border-color: var(--accent-blue);
+            transform: translateY(-2px);
+        }
+        .stat-label { color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 5px; }
+        .stat-value { font-size: 1.8rem; font-weight: 700; color: var(--accent-blue); }
+        .stat-value.positive { color: var(--accent-green); }
+        .stat-value.negative { color: var(--accent-red); }
+
+        /* 백테스트 차트 섹션 */
+        .backtest-section {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+        .section-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .section-title { font-size: 1.2rem; font-weight: 600; color: var(--accent-purple); }
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            padding: 20px;
+        }
+        .chart-card {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        .chart-card:hover {
+            border-color: var(--accent-purple);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(188, 140, 255, 0.15);
+        }
+        .chart-card-title { font-weight: 600; margin-bottom: 10px; color: var(--text-primary); }
+        .chart-card-meta { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 15px; }
+        .chart-card-stats { display: flex; gap: 15px; flex-wrap: wrap; }
+        .chart-stat { font-size: 0.85rem; }
+        .chart-stat-label { color: var(--text-secondary); }
+        .chart-stat-value { font-weight: 600; }
+        .chart-stat-value.positive { color: var(--accent-green); }
+        .chart-stat-value.negative { color: var(--accent-red); }
+        .view-chart-btn {
+            display: inline-block;
+            margin-top: 15px;
+            padding: 8px 16px;
+            background: var(--accent-purple);
+            color: #000;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+        .view-chart-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+</style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1>📊 Strategy Research Lab</h1>
+                <p class="subtitle">TradingView 전략 분석 대시보드</p>
+            </div>
+            <nav class="nav-links">
+                <a href="/" class="active">대시보드</a>
+                <a href="/live">실전매매</a>
+                <a href="/api/docs">API 문서</a>
+            </nav>
+        </header>
+
+        <!-- 통계 요약 -->
+        <div class="stats-grid" id="statsGrid">
+            <div class="stat-card">
+                <div class="stat-label">📈 총 전략 수</div>
+                <div class="stat-value" id="totalStrategies">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">✅ 분석 완료</div>
+                <div class="stat-value" id="analyzedCount">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">⭐ 권장 전략</div>
+                <div class="stat-value positive" id="passedCount">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">📊 평균 점수</div>
+                <div class="stat-value" id="avgScore">-</div>
+            </div>
+        </div>
+
+        <!-- 백테스트 차트 섹션 (5.1.1 개선) -->
+        <div class="backtest-section">
+            <div class="section-header">
+                <h2 class="section-title">📈 백테스트 결과 차트</h2>
+                <span style="color: var(--text-secondary); font-size: 0.9rem;">실제 과거 데이터로 테스트한 결과</span>
+            </div>
+            <div class="chart-grid" id="chartGrid">
+                <div style="padding: 40px; text-align: center; color: var(--text-secondary); grid-column: 1 / -1;">
+                    차트를 불러오는 중...
+                </div>
+            </div>
+        </div>
+
+        <!-- 전략 목록 -->
+        <div class="backtest-section">
+            <div class="section-header">
+                <h2 class="section-title">🎯 분석된 전략 목록</h2>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <select id="gradeFilter" style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 12px; border-radius: 6px;">
+                        <option value="">전체 등급</option>
+                        <option value="A">A 등급</option>
+                        <option value="B">B 등급</option>
+                        <option value="C">C 등급</option>
+                        <option value="D">D 등급</option>
+                        <option value="F">F 등급</option>
+                    </select>
+                    <input type="text" id="searchInput" placeholder="검색..." style="background: var(--bg-tertiary); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px 12px; border-radius: 6px; width: 200px;">
+                </div>
+            </div>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead style="background: var(--bg-tertiary);">
+                        <tr>
+                            <th style="padding: 12px 15px; text-align: left; color: var(--text-secondary); font-size: 0.85rem;">전략명</th>
+                            <th style="padding: 12px 15px; text-align: left; color: var(--text-secondary); font-size: 0.85rem;">작성자</th>
+                            <th style="padding: 12px 15px; text-align: right; color: var(--text-secondary); font-size: 0.85rem;">좋아요</th>
+                            <th style="padding: 12px 15px; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">등급</th>
+                            <th style="padding: 12px 15px; text-align: right; color: var(--text-secondary); font-size: 0.85rem;">점수</th>
+                            <th style="padding: 12px 15px; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">상세</th>
+                        </tr>
+                    </thead>
+                    <tbody id="strategiesBody">
+                        <tr>
+                            <td colspan="6" style="padding: 30px; text-align: center; color: var(--text-secondary);">
+                                전략 목록을 불러오는 중...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 푸터 -->
+        <footer style="margin-top: 30px; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">
+            <p>Strategy Research Lab | TradingView 전략 분석 시스템</p>
+            <p style="margin-top: 5px;">⚠️ 이 리포트는 참고용이며, 투자 결정에 대한 책임은 본인에게 있습니다.</p>
+        </footer>
+    </div>
+
+    <!-- 전략 상세 모달 (5.1.2) -->
+    <div id="strategyModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.85); z-index: 1000; overflow-y: auto; padding: 20px;">
+        <div style="background: var(--bg-secondary); border-radius: 16px; border: 1px solid var(--border-color); max-width: 900px; width: 100%; margin: 40px auto; box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+            <div style="padding: 25px 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: flex-start;">
+                <div>
+                    <h2 id="modalTitle" style="font-size: 1.4rem; font-weight: 600; margin-bottom: 8px;"></h2>
+                    <div id="modalMeta" style="color: var(--text-secondary); font-size: 0.9rem;"></div>
+                </div>
+                <button onclick="closeModal()" style="background: none; border: none; color: var(--text-secondary); font-size: 1.5rem; cursor: pointer; padding: 0; width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; border-radius: 8px;">×</button>
+            </div>
+            <div id="modalBody" style="padding: 25px 30px; max-height: 70vh; overflow-y: auto;"></div>
+        </div>
+    </div>
+</body>
+</html>
+
+    <script>
+        const API_BASE = '';
+
+        // 페이지 로드 시 초기화
+        document.addEventListener('DOMContentLoaded', () => {
+            loadStats();
+            loadBacktestCharts();
+            loadStrategies();
+        });
+
+        // 통계 로드
+        async function loadStats() {
+            try {
+                const response = await fetch(`${API_BASE}/api/stats`);
+                const data = await response.json();
+                
+                document.getElementById('totalStrategies').textContent = data.total_strategies || 0;
+                document.getElementById('analyzedCount').textContent = data.analyzed_count || 0;
+                document.getElementById('passedCount').textContent = data.passed_count || 0;
+                document.getElementById('avgScore').textContent = (data.avg_score || 0).toFixed(1);
+            } catch (error) {
+                console.error('Stats load error:', error);
+            }
+        }
+
+        // 백테스트 차트 로드 (5.1.1 개선)
+        async function loadBacktestCharts() {
+            try {
+                const response = await fetch(`${API_BASE}/api/backtest-charts`);
+                const data = await response.json();
+                
+                const container = document.getElementById('chartGrid');
+                
+                if (!data.charts || data.charts.length === 0) {
+                    container.innerHTML = `
+                        <div style="padding: 40px; text-align: center; color: var(--text-secondary); grid-column: 1 / -1;">
+                            백테스트 차트가 없습니다.
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = data.charts.map(chart => `
+                    <div class="chart-card" onclick="window.open('${chart.url}', '_blank')">
+                        <div class="chart-card-title">📊 ${chart.strategy.toUpperCase()} 전략</div>
+                        <div class="chart-card-meta">백테스트 결과 차트</div>
+                        <div class="chart-card-stats">
+                            <div class="chart-stat">
+                                <span class="chart-stat-label">파일: </span>
+                                <span class="chart-stat-value">${chart.filename}</span>
+                            </div>
+                        </div>
+                        <a href="${chart.url}" target="_blank" class="view-chart-btn" onclick="event.stopPropagation()">
+                            📈 차트 보기
+                        </a>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Charts load error:', error);
+                document.getElementById('chartGrid').innerHTML = `
+                    <div style="padding: 40px; text-align: center; color: var(--accent-red); grid-column: 1 / -1;">
+                        차트 로드 실패: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // 전략 목록 로드
+        async function loadStrategies() {
+            try {
+                const grade = document.getElementById('gradeFilter').value;
+                const search = document.getElementById('searchInput').value;
+                
+                let url = `${API_BASE}/api/strategies?limit=50`;
+                if (grade) url += `&grade=${grade}`;
+                if (search) url += `&search=${encodeURIComponent(search)}`;
+                
+                const response = await fetch(url);
+                const strategies = await response.json();
+                
+                const tbody = document.getElementById('strategiesBody');
+                
+                if (!strategies || strategies.length === 0) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" style="padding: 30px; text-align: center; color: var(--text-secondary);">
+                                전략이 없습니다.
+                            </td>
+                        </tr>
+                    `;
+                    return;
+                }
+                
+                tbody.innerHTML = strategies.map(s => `
+                    <tr style="border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="showStrategyDetail('${s.script_id}')">
+                        <td style="padding: 12px 15px; font-weight: 600;">${escapeHtml(s.title)}</td>
+                        <td style="padding: 12px 15px; color: var(--text-secondary);">${escapeHtml(s.author)}</td>
+                        <td style="padding: 12px 15px; text-align: right;">❤️ ${s.likes || 0}</td>
+                        <td style="padding: 12px 15px; text-align: center;">
+                            <span class="grade grade-${s.grade || 'F'}" style="display: inline-block; padding: 4px 10px; border-radius: 4px; font-weight: 600; font-size: 0.85rem;
+                                background: ${getGradeColor(s.grade)}; color: ${s.grade === 'F' ? '#fff' : '#000'};">
+                                ${s.grade || '-'}
+                            </span>
+                        </td>
+                        <td style="padding: 12px 15px; text-align: right; font-weight: 600; color: ${getScoreColor(s.total_score)};">
+                            ${s.total_score ? s.total_score.toFixed(1) : '-'}
+                        </td>
+                        <td style="padding: 12px 15px; text-align: center;">
+                            <button onclick="event.stopPropagation(); showStrategyDetail('${s.script_id}')" 
+                                style="background: var(--accent-blue); color: #000; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
+                                상세
+                            </button>
+                        </td>
+                    </tr>
+                `).join('');
+                
+            } catch (error) {
+                console.error('Strategies load error:', error);
+            }
+        }
+
+        // 전략 상세 모달 표시 (5.1.2)
+        async function showStrategyDetail(scriptId) {
+            try {
+                const response = await fetch(`${API_BASE}/api/strategy/${scriptId}`);
+                const strategy = await response.json();
+                
+                document.getElementById('modalTitle').textContent = strategy.title || 'Unknown';
+                document.getElementById('modalMeta').textContent = `작성자: ${strategy.author || '-'} | 좋아요: ${strategy.likes || 0}`;
+                
+                const body = document.getElementById('modalBody');
+                body.innerHTML = `
+                    <!-- 등급 및 점수 -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                        <div style="background: var(--bg-tertiary); padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 5px;">등급</div>
+                            <div style="font-size: 2rem; font-weight: 700; color: ${getGradeTextColor(strategy.grade)};">${strategy.grade || '-'}</div>
+                        </div>
+                        <div style="background: var(--bg-tertiary); padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 5px;">총점</div>
+                            <div style="font-size: 2rem; font-weight: 700; color: ${getScoreColor(strategy.total_score)};">${strategy.total_score ? strategy.total_score.toFixed(1) : '-'}</div>
+                        </div>
+                        <div style="background: var(--bg-tertiary); padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 5px;">리페인팅</div>
+                            <div style="font-size: 2rem; font-weight: 700; color: ${getRiskColor(strategy.repainting_score)};">${strategy.repainting_score ? strategy.repainting_score.toFixed(1) : '-'}</div>
+                        </div>
+                        <div style="background: var(--bg-tertiary); padding: 15px; border-radius: 8px; text-align: center;">
+                            <div style="color: var(--text-secondary); font-size: 0.85rem; margin-bottom: 5px;">오버피팅</div>
+                            <div style="font-size: 2rem; font-weight: 700; color: ${getRiskColor(strategy.overfitting_score)};">${strategy.overfitting_score ? strategy.overfitting_score.toFixed(1) : '-'}</div>
+                        </div>
+                    </div>
+                    
+                    <!-- 분석 결과 -->
+                    ${strategy.analysis ? `
+                    <div style="margin-bottom: 25px;">
+                        <h3 style="color: var(--accent-blue); margin-bottom: 15px; font-size: 1.1rem;">📊 분석 결과</h3>
+                        <div style="background: var(--bg-tertiary); padding: 15px; border-radius: 8px;">
+                            ${strategy.analysis.summary ? `<p style="margin-bottom: 10px;">${escapeHtml(strategy.analysis.summary)}</p>` : ''}
+                            ${strategy.analysis.recommendation ? `
+                            <div style="padding: 12px; border-radius: 6px; margin-top: 10px;
+                                background: ${strategy.grade === 'A' || strategy.grade === 'B' ? 'rgba(63, 185, 80, 0.1)' : 'rgba(248, 81, 73, 0.1)'};
+                                border: 1px solid ${strategy.grade === 'A' || strategy.grade === 'B' ? 'rgba(63, 185, 80, 0.3)' : 'rgba(248, 81, 73, 0.3)'};">
+                                <strong>${strategy.grade === 'A' || strategy.grade === 'B' ? '✅ 권장' : '⚠️ 주의'}</strong>: ${escapeHtml(strategy.analysis.recommendation)}
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                    ` : ''}
+                    
+                    <!-- Pine 코드 -->
+                    ${strategy.pine_code ? `
+                    <div style="margin-bottom: 25px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                            <h3 style="color: var(--accent-purple); font-size: 1.1rem;">🌲 Pine Script 코드</h3>
+                            <button onclick="copyCode()" style="background: var(--accent-blue); color: #000; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">
+                                📋 복사
+                            </button>
+                        </div>
+                        <pre id="pineCode" style="background: var(--bg-tertiary); padding: 15px; border-radius: 8px; overflow-x: auto; font-family: 'Consolas', monospace; font-size: 0.85rem; max-height: 300px; overflow-y: auto;">${escapeHtml(strategy.pine_code)}</pre>
+                    </div>
+                    ` : ''}
+                    
+                    <!-- 성능 데이터 -->
+                    ${strategy.performance ? `
+                    <div>
+                        <h3 style="color: var(--accent-green); margin-bottom: 15px; font-size: 1.1rem;">📈 성능 데이터</h3>
+                        <div style="background: var(--bg-tertiary); padding: 15px; border-radius: 8px;">
+                            <pre style="font-family: 'Consolas', monospace; font-size: 0.85rem; overflow-x: auto;">${JSON.stringify(strategy.performance, null, 2)}</pre>
+                        </div>
+                    </div>
+                    ` : ''}
+                `;
+                
+                document.getElementById('strategyModal').style.display = 'block';
+                
+            } catch (error) {
+                console.error('Strategy detail error:', error);
+                alert('전략 상세 정보를 불러올 수 없습니다.');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('strategyModal').style.display = 'none';
+        }
+
+        function copyCode() {
+            const code = document.getElementById('pineCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('코드가 복사되었습니다!');
+            });
+        }
+
+        // 유틸리티 함수들
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function getGradeColor(grade) {
+            const colors = {
+                'A': 'var(--accent-green)',
+                'B': 'var(--accent-blue)',
+                'C': 'var(--accent-yellow)',
+                'D': 'var(--accent-orange)',
+                'F': 'var(--accent-red)'
+            };
+            return colors[grade] || 'var(--text-secondary)';
+        }
+
+        function getGradeTextColor(grade) {
+            return getGradeColor(grade);
+        }
+
+        function getScoreColor(score) {
+            if (!score) return 'var(--text-secondary)';
+            if (score >= 80) return 'var(--accent-green)';
+            if (score >= 60) return 'var(--accent-blue)';
+            if (score >= 40) return 'var(--accent-yellow)';
+            return 'var(--accent-red)';
+        }
+
+        function getRiskColor(score) {
+            if (!score) return 'var(--text-secondary)';
+            if (score >= 80) return 'var(--accent-green)';
+            if (score >= 60) return 'var(--accent-yellow)';
+            return 'var(--accent-red)';
+        }
+
+        // 필터 이벤트
+        document.getElementById('gradeFilter').addEventListener('change', loadStrategies);
+        document.getElementById('searchInput').addEventListener('input', debounce(loadStrategies, 300));
+
+        function debounce(func, wait) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            };
+        }
+
+        // 모달 외부 클릭 시 닫기
+        document.getElementById('strategyModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+
+        // ESC 키로 모달 닫기
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') closeModal();
+        });
+    </script>

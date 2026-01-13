@@ -591,7 +591,13 @@ async def get_strategy_detail(request: Request, script_id: str):
 
 @app.get("/")
 async def serve_index():
-    """메인 페이지 (초보자 리포트)"""
+    """메인 페이지 (개선된 대시보드)"""
+    # 개선된 대시보드 (5.1.1, 5.1.2)
+    dashboard_file = BASE_DIR / "templates" / "dashboard.html"
+    if dashboard_file.exists():
+        return FileResponse(dashboard_file)
+    
+    # 기존 초보자 리포트
     html_file = DATA_DIR / "beginner_report.html"
     if html_file.exists():
         return FileResponse(html_file)
