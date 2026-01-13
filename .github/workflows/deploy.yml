@@ -81,8 +81,8 @@ jobs:
       - name: Start containers
         run: |
           ssh root@$SERVER_IP "cd $DEPLOY_PATH && \
-            docker compose up -d && \
-            sleep 5 && \
+            docker compose up -d --wait --wait-timeout 180 || true && \
+            sleep 10 && \
             docker compose ps"
 
       - name: Health Check
