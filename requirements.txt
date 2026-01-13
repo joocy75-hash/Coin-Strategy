@@ -56,17 +56,18 @@ anthropic>=0.40.0
 cryptography>=42.0.0
 
 # ============================================================
-# 7단계: 오픈소스 통합 (Optional)
+# 7단계: 오픈소스 통합
 # ============================================================
 
 # 7.1 Pine Script Parser - AST 기반 정적 분석
-# pynescript>=0.2.0  # 설치: pip install pynescript
+pynescript>=0.2.0
 
 # 7.2 VectorBT - 고속 백테스팅 (10-100배 빠름)
-# vectorbt>=0.26.0  # 설치: pip install vectorbt
+vectorbt>=0.26.0
 
 # 7.3 FinBERT - 금융 감성 분석
-# transformers>=4.36.0  # 설치: pip install transformers torch
+transformers>=4.36.0
+torch
 
 # Development & Testing (optional)
 pytest>=7.4.0
