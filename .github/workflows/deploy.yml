@@ -1,8 +1,5 @@
 # GitHub Actions - Auto Deploy to Hetzner Server
 # main 브랜치에 push 시 자동으로 원격 서버에 배포
-#
-# Security Note: This workflow only uses repository secrets (SSH_PRIVATE_KEY, ANTHROPIC_API_KEY)
-# and does not process any untrusted user input (issue titles, PR descriptions, etc.)
 
 name: Deploy to Production
 
@@ -20,6 +17,7 @@ jobs:
   deploy:
     name: Deploy to New Server
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
       - name: Checkout code
@@ -33,6 +31,11 @@ jobs:
           echo "$SSH_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H $SERVER_IP >> ~/.ssh/known_hosts
+          # SSH 연결 유지 설정
+          echo "Host *" >> ~/.ssh/config
+          echo "  ServerAliveInterval 60" >> ~/.ssh/config
+          echo "  ServerAliveCountMax 10" >> ~/.ssh/config
+          echo "  TCPKeepAlive yes" >> ~/.ssh/config
 
       - name: Create .env file on server
         env:
@@ -67,43 +70,45 @@ jobs:
             --exclude 'logs/' \
             ./ root@$SERVER_IP:$DEPLOY_PATH/
 
-      - name: Build and restart containers
+      - name: Build Docker images
+        run: |
+          ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=10 root@$SERVER_IP "cd $DEPLOY_PATH && \
+            mkdir -p data logs data/converted data/reports && \
+            docker network create proxy-net 2>/dev/null || true && \
+            docker compose down --remove-orphans 2>/dev/null || true && \
+            docker compose build --parallel 2>&1 | tail -50"
+
+      - name: Start containers
         run: |
           ssh root@$SERVER_IP "cd $DEPLOY_PATH && \
-            mkdir -p data logs data/converted data/reports && \
-            docker network create proxy-net || true && \
-            docker compose down || true && \
-            docker compose build --no-cache && \
             docker compose up -d && \
-            sleep 10 && \
+            sleep 5 && \
             docker compose ps"
 
       - name: Health Check
         run: |
           echo "Waiting for services to stabilize..."
-          sleep 45
-          # 프록시를 통한 헬스체크 (Port 80)
-          # 여러 번 시도 (최대 3회)
-          for i in {1..3}; do
-            response=$(curl -s -o /dev/null -w "%{http_code}" http://$SERVER_IP/api/health || echo "000")
+          sleep 60
+          for i in {1..5}; do
+            response=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 http://$SERVER_IP/api/health || echo "000")
             if [ "$response" = "200" ]; then
-              echo "Health check passed on attempt $i!"
+              echo "✅ Health check passed on attempt $i!"
               exit 0
             fi
-            echo "Attempt $i failed with response: $response. Retrying in 10s..."
-            sleep 10
+            echo "Attempt $i: response=$response. Retrying in 15s..."
+            sleep 15
           done
           
-          echo "Health check failed after 3 attempts."
+          echo "❌ Health check failed after 5 attempts."
           ssh root@$SERVER_IP "docker compose -f $DEPLOY_PATH/docker-compose.yml ps"
-          ssh root@$SERVER_IP "docker compose -f $DEPLOY_PATH/docker-compose.yml logs --tail=100"
+          ssh root@$SERVER_IP "docker compose -f $DEPLOY_PATH/docker-compose.yml logs --tail=50"
           exit 1
 
       - name: Deployment Summary
         if: success()
         run: |
-          echo "Deployment successful!"
-          echo "API URL: http://$SERVER_IP/api/docs"
+          echo "✅ Deployment successful!"
+          echo "🔗 API URL: http://$SERVER_IP/api/docs"
 
       - name: Send Telegram Notification
         if: always()
@@ -114,15 +119,14 @@ jobs:
           STATUS="${{ job.status }}"
           if [ "$STATUS" = "success" ]; then
             EMOJI="✅"
-            MSG="<b>Strategy Research Lab 배포 성공!</b>"
+            MSG="Strategy Research Lab 배포 성공!"
           else
             EMOJI="❌"
-            MSG="<b>Strategy Research Lab 배포 실패!</b>"
+            MSG="Strategy Research Lab 배포 실패!"
           fi
           
-          TEXT="${EMOJI} ${MSG}%0A%0A📍 서버: ${SERVER_IP}%0A⏰ 시간: $(date '+%Y-%m-%d %H:%M:%S')%0A🔗 API: http://${SERVER_IP}/api/docs"
+          TEXT="${EMOJI} ${MSG}%0A서버: ${SERVER_IP}%0A시간: $(date '+%Y-%m-%d %H:%M:%S')"
           
           curl -s -X POST "https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage" \
             -d "chat_id=${TELEGRAM_CHAT_ID}" \
-            -d "text=${TEXT}" \
-            -d "parse_mode=HTML"
+            -d "text=${TEXT}" || true
