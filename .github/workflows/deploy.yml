@@ -74,6 +74,7 @@ jobs:
         run: |
           ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=10 root@$SERVER_IP "cd $DEPLOY_PATH && \
             mkdir -p data logs data/converted data/reports && \
+            chmod -R 777 logs data && \
             docker network create proxy-net 2>/dev/null || true && \
             docker compose down --remove-orphans 2>/dev/null || true && \
             docker compose build --parallel 2>&1 | tail -50"

@@ -58,7 +58,8 @@ COPY --chown=${APP_USER}:${APP_USER} . .
 
 # Create necessary directories with proper ownership
 RUN mkdir -p data logs data/converted data/reports \
-    && chown -R ${APP_USER}:${APP_USER} /app
+    && chown -R ${APP_USER}:${APP_USER} /app \
+    && chmod -R 755 /app/logs /app/data
 
 # Switch to non-root user
 USER ${APP_USER}

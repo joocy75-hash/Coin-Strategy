@@ -53,7 +53,7 @@ jobs:
     - uses: actions/checkout@v4
     - name: Create deployment package
       run: tar -czf deploy.tar.gz src/ requirements.txt *.md
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       with:
         name: deployment-package
         path: deploy.tar.gz
