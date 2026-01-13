@@ -598,6 +598,22 @@ async def serve_index():
     return {"message": "Welcome to Strategy Research Lab API", "docs": "/api/docs"}
 
 
+@app.get("/live")
+async def serve_live_dashboard():
+    """실전매매 모니터링 대시보드"""
+    # Docker 환경 (/app/data)
+    html_file = DATA_DIR / "live_trading_dashboard.html"
+    if html_file.exists():
+        return FileResponse(html_file)
+    
+    # templates 폴더
+    templates_file = BASE_DIR / "templates" / "live_trading_dashboard.html"
+    if templates_file.exists():
+        return FileResponse(templates_file)
+    
+    raise HTTPException(status_code=404, detail="Live trading dashboard not found")
+
+
 @app.get("/report.html")
 async def serve_report():
     """일반 리포트"""
