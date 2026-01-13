@@ -49,6 +49,10 @@ gh run view --log | tail -50
 
 ### 4. 서버 헬스체크
 ```bash
+# 직접 포트 접근 (권장)
+curl http://141.164.55.245:8081/api/health
+
+# Nginx 프록시 (설정된 경우)
 curl http://141.164.55.245/api/health
 ```
 

@@ -75,6 +75,7 @@ jobs:
           ssh -o ServerAliveInterval=60 -o ServerAliveCountMax=10 root@$SERVER_IP "cd $DEPLOY_PATH && \
             mkdir -p data logs data/converted data/reports && \
             chmod -R 777 logs data && \
+            docker system prune -af --volumes 2>/dev/null || true && \
             docker network create proxy-net 2>/dev/null || true && \
             docker compose down --remove-orphans 2>/dev/null || true && \
             docker compose build --parallel 2>&1 | tail -50"
@@ -90,15 +91,15 @@ jobs:
       - name: Health Check
         run: |
           echo "Waiting for services to stabilize..."
-          sleep 60
+          sleep 30
           for i in {1..5}; do
-            response=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 http://$SERVER_IP/api/health || echo "000")
+            response=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 http://$SERVER_IP:8081/api/health || echo "000")
             if [ "$response" = "200" ]; then
               echo "✅ Health check passed on attempt $i!"
               exit 0
             fi
-            echo "Attempt $i: response=$response. Retrying in 15s..."
-            sleep 15
+            echo "Attempt $i: response=$response. Retrying in 10s..."
+            sleep 10
           done
           
           echo "❌ Health check failed after 5 attempts."
