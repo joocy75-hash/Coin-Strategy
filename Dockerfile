@@ -53,12 +53,15 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Install Playwright browsers (as root, then fix permissions)
 RUN playwright install chromium --with-deps
 
+# Create necessary directories with proper ownership BEFORE copying code
+RUN mkdir -p data logs data/converted data/reports \
+    && chown -R ${APP_USER}:${APP_USER} /app
+
 # Copy application code
 COPY --chown=${APP_USER}:${APP_USER} . .
 
-# Create necessary directories with proper ownership
-RUN mkdir -p data logs data/converted data/reports \
-    && chown -R ${APP_USER}:${APP_USER} /app \
+# Ensure directories have correct permissions after copy
+RUN chown -R ${APP_USER}:${APP_USER} /app/data /app/logs \
     && chmod -R 755 /app/logs /app/data
 
 # Switch to non-root user
