@@ -1,0 +1,29 @@
+# Freqtrade Docker Compose 설정
+# 최신 버전: 2025.12
+
+version: '3.8'
+
+services:
+  freqtrade:
+    image: freqtradeorg/freqtrade:stable
+    container_name: freqtrade
+    restart: unless-stopped
+    volumes:
+      - ./user_data:/freqtrade/user_data
+      - ./config.json:/freqtrade/config.json
+    ports:
+      - "8080:8080"
+    command: >
+      trade
+      --config /freqtrade/config.json
+      --strategy SampleStrategy
+    environment:
+      - TZ=Asia/Seoul
+    
+  # FreqUI (웹 인터페이스) - 별도 컨테이너 불필요
+  # Freqtrade 2025.x부터 FreqUI가 내장됨
+  # http://141.164.55.245:8080 에서 접속 가능
+
+networks:
+  default:
+    name: freqtrade_network
