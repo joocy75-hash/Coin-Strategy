@@ -45,18 +45,19 @@ console_handler = logging.StreamHandler(sys.stdout)
 console_handler.setLevel(logging.INFO)
 console_formatter = logging.Formatter(
     "%(asctime)s | %(levelname)-8s | %(name)s | %(message)s",
-    datefmt="%Y-%m-%d %H:%M:%S"
+    datefmt="%Y-%m-%d %H:%M:%S",
 )
 console_handler.setFormatter(console_formatter)
 logger.addHandler(console_handler)
 
 # 파일 핸들러
 from logging.handlers import RotatingFileHandler
+
 file_handler = RotatingFileHandler(
     LOG_DIR / "api.log",
     maxBytes=10 * 1024 * 1024,  # 10MB
     backupCount=5,
-    encoding="utf-8"
+    encoding="utf-8",
 )
 file_handler.setLevel(logging.INFO)
 file_handler.setFormatter(console_formatter)
@@ -64,10 +65,7 @@ logger.addHandler(file_handler)
 
 # JSON 로그 핸들러 (구조화된 로깅)
 json_handler = RotatingFileHandler(
-    LOG_DIR / "api.json.log",
-    maxBytes=10 * 1024 * 1024,
-    backupCount=5,
-    encoding="utf-8"
+    LOG_DIR / "api.json.log", maxBytes=10 * 1024 * 1024, backupCount=5, encoding="utf-8"
 )
 json_handler.setLevel(logging.INFO)
 
@@ -96,6 +94,7 @@ logger.addHandler(json_handler)
 # Input Validation & Sanitization
 # ============================================================
 
+
 def sanitize_input(value: str, max_length: int = 200) -> str:
     """입력값 sanitize - SQL Injection 및 XSS 방지"""
     if not value:
@@ -103,7 +102,7 @@ def sanitize_input(value: str, max_length: int = 200) -> str:
     # 길이 제한
     value = value[:max_length]
     # 위험한 문자 제거 (SQL injection, XSS 방지)
-    value = re.sub(r'[<>"\';\\]', '', value)
+    value = re.sub(r'[<>"\';\\]', "", value)
     return value.strip()
 
 
@@ -112,7 +111,7 @@ def validate_script_id(script_id: str) -> str:
     if not script_id:
         raise HTTPException(status_code=400, detail="script_id is required")
     # 영숫자, 하이픈, 언더스코어만 허용 (최대 100자)
-    if not re.match(r'^[a-zA-Z0-9_-]{1,100}$', script_id):
+    if not re.match(r"^[a-zA-Z0-9_-]{1,100}$", script_id):
         raise HTTPException(status_code=400, detail="Invalid script_id format")
     return script_id
 
@@ -187,8 +186,10 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 # Global Error Handlers
 # ============================================================
 
+
 class ErrorResponse(BaseModel):
     """표준 에러 응답"""
+
     success: bool = False
     error: str
     error_code: str
@@ -212,7 +213,7 @@ async def http_exception_handler(request: Request, exc: HTTPException):
             "error_code": f"HTTP_{exc.status_code}",
             "timestamp": datetime.now().isoformat(),
             "request_id": request_id,
-        }
+        },
     )
 
 
@@ -223,7 +224,7 @@ async def global_exception_handler(request: Request, exc: Exception):
     logger.error(
         f"Unhandled exception: {str(exc)} | "
         f"Path: {request.url.path} | Request ID: {request_id}",
-        exc_info=True
+        exc_info=True,
     )
     return JSONResponse(
         status_code=500,
@@ -233,7 +234,7 @@ async def global_exception_handler(request: Request, exc: Exception):
             "error_code": "INTERNAL_ERROR",
             "timestamp": datetime.now().isoformat(),
             "request_id": request_id,
-        }
+        },
     )
 
 
@@ -251,44 +252,49 @@ async def log_requests(request: Request, call_next):
     # 요청 ID 생성
     request_id = str(uuid.uuid4())[:8]
     request.state.request_id = request_id
-    
+
     # 시작 시간
     start_time = time.time()
-    
+
     # 요청 로깅
     logger.info(
         f"Request: {request.method} {request.url.path} | "
         f"Client: {request.client.host if request.client else 'unknown'} | "
         f"Request ID: {request_id}"
     )
-    
+
     # 요청 처리
     response = await call_next(request)
-    
+
     # 처리 시간 계산
     process_time = time.time() - start_time
-    
+
     # 응답 로깅
     logger.info(
         f"Response: {response.status_code} | "
         f"Time: {process_time:.3f}s | "
         f"Request ID: {request_id}"
     )
-    
+
     # 응답 헤더에 요청 ID 추가
     response.headers["X-Request-ID"] = request_id
     response.headers["X-Process-Time"] = f"{process_time:.3f}"
-    
+
     return response
+
 
 # CORS 설정 - 보안 강화
 # 프로덕션에서는 특정 도메인만 허용
-ALLOWED_ORIGINS = os.getenv("ALLOWED_ORIGINS", "").split(",") if os.getenv("ALLOWED_ORIGINS") else [
-    "http://141.164.55.245",
-    "http://141.164.55.245:8081",
-    "http://localhost:3000",
-    "http://localhost:8080",
-]
+ALLOWED_ORIGINS = (
+    os.getenv("ALLOWED_ORIGINS", "").split(",")
+    if os.getenv("ALLOWED_ORIGINS")
+    else [
+        "http://141.164.55.245",
+        "http://141.164.55.245:8081",
+        "http://localhost:3000",
+        "http://localhost:8080",
+    ]
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -545,7 +551,7 @@ async def get_strategy_detail(request: Request, script_id: str):
     """전략 상세 정보 조회"""
     # script_id 검증
     script_id = validate_script_id(script_id)
-    
+
     try:
         conn = get_db()
         cur = conn.cursor()
@@ -591,13 +597,18 @@ async def get_strategy_detail(request: Request, script_id: str):
 
 @app.get("/")
 async def serve_index():
-    """메인 페이지 (개선된 대시보드)"""
-    # 개선된 대시보드 (5.1.1, 5.1.2)
+    """메인 페이지 (통합 대시보드)"""
+    # 1. 통합 대시보드 우선 (최신 프리미엄 UI)
+    integrated_file = DATA_DIR / "integrated_dashboard.html"
+    if integrated_file.exists():
+        return FileResponse(integrated_file)
+
+    # 2. 개선된 개별 대시보드
     dashboard_file = BASE_DIR / "templates" / "dashboard.html"
     if dashboard_file.exists():
         return FileResponse(dashboard_file)
-    
-    # 기존 초보자 리포트
+
+    # 3. 기존 초보자 리포트
     html_file = DATA_DIR / "beginner_report.html"
     if html_file.exists():
         return FileResponse(html_file)
@@ -611,12 +622,12 @@ async def serve_live_dashboard():
     html_file = DATA_DIR / "live_trading_dashboard.html"
     if html_file.exists():
         return FileResponse(html_file)
-    
+
     # templates 폴더
     templates_file = BASE_DIR / "templates" / "live_trading_dashboard.html"
     if templates_file.exists():
         return FileResponse(templates_file)
-    
+
     raise HTTPException(status_code=404, detail="Live trading dashboard not found")
 
 
@@ -636,41 +647,47 @@ async def serve_backtest_chart(strategy_name: str):
     chart_file = BASE_DIR.parent / f"{strategy_name}_backtest_result.html"
     if chart_file.exists():
         return FileResponse(chart_file)
-    
+
     # data 디렉토리에서 찾기
     chart_file = DATA_DIR / f"{strategy_name}_backtest_result.html"
     if chart_file.exists():
         return FileResponse(chart_file)
-    
-    raise HTTPException(status_code=404, detail=f"Backtest chart for '{strategy_name}' not found")
+
+    raise HTTPException(
+        status_code=404, detail=f"Backtest chart for '{strategy_name}' not found"
+    )
 
 
 @app.get("/api/backtest-charts")
 async def list_backtest_charts():
     """사용 가능한 백테스트 차트 목록"""
     charts = []
-    
+
     # 프로젝트 루트에서 찾기
     root_dir = BASE_DIR.parent
     for f in root_dir.glob("*_backtest_result.html"):
         strategy_name = f.stem.replace("_backtest_result", "")
-        charts.append({
-            "strategy": strategy_name,
-            "url": f"/backtest/{strategy_name}",
-            "filename": f.name
-        })
-    
+        charts.append(
+            {
+                "strategy": strategy_name,
+                "url": f"/backtest/{strategy_name}",
+                "filename": f.name,
+            }
+        )
+
     # data 디렉토리에서 찾기
     if DATA_DIR.exists():
         for f in DATA_DIR.glob("*_backtest_result.html"):
             strategy_name = f.stem.replace("_backtest_result", "")
             if not any(c["strategy"] == strategy_name for c in charts):
-                charts.append({
-                    "strategy": strategy_name,
-                    "url": f"/backtest/{strategy_name}",
-                    "filename": f.name
-                })
-    
+                charts.append(
+                    {
+                        "strategy": strategy_name,
+                        "url": f"/backtest/{strategy_name}",
+                        "filename": f.name,
+                    }
+                )
+
     return {"charts": charts, "count": len(charts)}
 
 
@@ -730,7 +747,9 @@ async def run_backtest(request: Request, backtest_request: BacktestRequest):
 
         if result.get("error"):
             return BacktestResponse(
-                success=False, script_id=backtest_request.script_id, error=result["error"]
+                success=False,
+                script_id=backtest_request.script_id,
+                error=result["error"],
             )
 
         return BacktestResponse(
@@ -803,7 +822,7 @@ async def get_backtest_result(request: Request, script_id: str):
     """전략의 저장된 백테스트 결과 조회"""
     # script_id 검증
     script_id = validate_script_id(script_id)
-    
+
     try:
         conn = get_db()
         cur = conn.cursor()
@@ -862,19 +881,20 @@ async def get_live_trading_status(request: Request):
     """실전매매 상태 조회"""
     try:
         import sys
+
         sys.path.insert(0, str(BASE_DIR))
-        
+
         from src.trading.live_safeguards import get_safeguards
-        
+
         safeguards = get_safeguards()
         status = safeguards.get_status()
-        
+
         return {
             "success": True,
             "timestamp": datetime.now().isoformat(),
             "status": status,
         }
-        
+
     except ImportError:
         return {
             "success": False,
@@ -887,6 +907,7 @@ async def get_live_trading_status(request: Request):
 
 class EmergencyStopRequest(BaseModel):
     """긴급 정지 요청"""
+
     reason: str = Field("Manual emergency stop", description="정지 사유")
     api_key: str = Field(..., description="API 인증 키")
 
@@ -896,38 +917,42 @@ class EmergencyStopRequest(BaseModel):
 async def emergency_stop(request: Request, stop_request: EmergencyStopRequest):
     """
     긴급 정지 API
-    
+
     실전매매 봇을 즉시 정지시킵니다.
     인증 필수: api_key 파라미터 필요
     """
     # API 키 검증
     if API_SECRET_KEY and stop_request.api_key != API_SECRET_KEY:
         raise HTTPException(status_code=401, detail="Invalid API key")
-    
+
     try:
         import sys
+
         sys.path.insert(0, str(BASE_DIR))
-        
+
         from src.trading.live_safeguards import get_safeguards
-        
+
         safeguards = get_safeguards()
         safeguards.emergency_stop(stop_request.reason)
-        
+
         return {
             "success": True,
             "message": f"Emergency stop activated: {stop_request.reason}",
             "timestamp": datetime.now().isoformat(),
             "status": safeguards.get_status(),
         }
-        
+
     except ImportError:
-        raise HTTPException(status_code=500, detail="Live trading safeguards not available")
+        raise HTTPException(
+            status_code=500, detail="Live trading safeguards not available"
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
 
 class ResetEmergencyRequest(BaseModel):
     """긴급 정지 해제 요청"""
+
     api_key: str = Field(..., description="API 인증 키")
 
 
@@ -936,32 +961,35 @@ class ResetEmergencyRequest(BaseModel):
 async def reset_emergency_stop(request: Request, reset_request: ResetEmergencyRequest):
     """
     긴급 정지 해제 API
-    
+
     긴급 정지 상태를 해제합니다.
     인증 필수: api_key 파라미터 필요
     """
     # API 키 검증
     if API_SECRET_KEY and reset_request.api_key != API_SECRET_KEY:
         raise HTTPException(status_code=401, detail="Invalid API key")
-    
+
     try:
         import sys
+
         sys.path.insert(0, str(BASE_DIR))
-        
+
         from src.trading.live_safeguards import get_safeguards
-        
+
         safeguards = get_safeguards()
         safeguards.reset_emergency_stop()
-        
+
         return {
             "success": True,
             "message": "Emergency stop reset. Call start() to resume trading.",
             "timestamp": datetime.now().isoformat(),
             "status": safeguards.get_status(),
         }
-        
+
     except ImportError:
-        raise HTTPException(status_code=500, detail="Live trading safeguards not available")
+        raise HTTPException(
+            status_code=500, detail="Live trading safeguards not available"
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error: {str(e)}")
 
@@ -975,6 +1003,7 @@ if DATA_DIR.exists():
 # Trade Log Endpoints (6.4)
 # ============================================================
 
+
 @app.get("/api/trades/recent")
 @limiter.limit("30/minute")
 async def get_recent_trades(
@@ -985,17 +1014,17 @@ async def get_recent_trades(
     try:
         sys.path.insert(0, str(BASE_DIR))
         from src.logging.trade_logger import get_trade_logger
-        
+
         trade_logger = get_trade_logger()
         trades = trade_logger.get_recent_trades(limit)
-        
+
         return {
             "success": True,
             "count": len(trades),
             "trades": trades,
             "timestamp": datetime.now().isoformat(),
         }
-        
+
     except ImportError:
         logger.warning("Trade logger not available")
         return {
@@ -1016,16 +1045,16 @@ async def get_trade_statistics(request: Request):
     try:
         sys.path.insert(0, str(BASE_DIR))
         from src.logging.trade_logger import get_trade_logger
-        
+
         trade_logger = get_trade_logger()
         stats = trade_logger.get_statistics()
-        
+
         return {
             "success": True,
             "statistics": stats,
             "timestamp": datetime.now().isoformat(),
         }
-        
+
     except ImportError:
         logger.warning("Trade logger not available")
         return {
@@ -1041,6 +1070,7 @@ async def get_trade_statistics(request: Request):
 
 class TradeExportRequest(BaseModel):
     """거래 내보내기 요청"""
+
     start_date: Optional[str] = Field(None, description="시작일 (YYYY-MM-DD)")
     end_date: Optional[str] = Field(None, description="종료일 (YYYY-MM-DD)")
     api_key: str = Field(..., description="API 인증 키")
@@ -1051,31 +1081,31 @@ class TradeExportRequest(BaseModel):
 async def export_trades(request: Request, export_request: TradeExportRequest):
     """
     거래 기록 CSV 내보내기 (세금 신고용)
-    
+
     인증 필수: api_key 파라미터 필요
     """
     # API 키 검증
     if API_SECRET_KEY and export_request.api_key != API_SECRET_KEY:
         raise HTTPException(status_code=401, detail="Invalid API key")
-    
+
     try:
         sys.path.insert(0, str(BASE_DIR))
         from src.logging.trade_logger import get_trade_logger
-        
+
         trade_logger = get_trade_logger()
         export_path = trade_logger.export_csv(
             start_date=export_request.start_date,
             end_date=export_request.end_date,
         )
-        
+
         logger.info(f"Trades exported to: {export_path}")
-        
+
         return FileResponse(
             export_path,
             media_type="text/csv",
             filename=Path(export_path).name,
         )
-        
+
     except ImportError:
         logger.warning("Trade logger not available")
         raise HTTPException(status_code=500, detail="Trade logger not available")
