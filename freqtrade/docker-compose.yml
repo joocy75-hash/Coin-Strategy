@@ -12,17 +12,33 @@ services:
       - ./user_data:/freqtrade/user_data
       - ./config.json:/freqtrade/config.json
     ports:
-      - "8080:8080"
+      - "8081:8081"
     command: >
       trade
       --config /freqtrade/config.json
       --strategy SampleStrategy
     environment:
       - TZ=Asia/Seoul
-    
+
+  freqtrade-backtest:
+    image: freqtradeorg/freqtrade:stable
+    container_name: freqtrade-backtest
+    restart: unless-stopped
+    volumes:
+      - ./user_data:/freqtrade/user_data
+      - ./config_backtest_server.json:/freqtrade/config.json
+    ports:
+      - "8082:8082"
+    command: >
+      webserver
+      --config /freqtrade/config.json
+    environment:
+      - TZ=Asia/Seoul
+
   # FreqUI (웹 인터페이스) - 별도 컨테이너 불필요
   # Freqtrade 2025.x부터 FreqUI가 내장됨
-  # http://141.164.55.245:8080 에서 접속 가능
+  # 8081: 실시간 트레이딩 서버
+  # 8082: 백테스트 전용 서버
 
 networks:
   default:
