@@ -1,0 +1,71 @@
+안녕하세요! Freqtrade 전략을 전달합니다.
+
+=== 전략 정보 ===
+
+전략명: SimpleAdaptiveStrategy
+타입: EMA 크로스오버 기반 추세 추종
+타임프레임: 1시간
+성과: 평균 수익률 111%, Sharpe 0.30, 일관성 80%
+
+=== 전략 로직 ===
+
+진입 조건 (모두 충족):
+- EMA(9) > EMA(21) - 상승 추세
+- RSI 40-70 - 과매수/과매도 회피
+- MACD > Signal - 모멘텀 확인
+- Volume > 평균의 50% - 유동성 확인
+
+청산 조건 (하나라도 충족):
+- EMA 크로스다운
+- RSI > 75 (과매수)
+- MACD < Signal
+
+리스크 관리:
+- 손절: -3%
+- 목표 수익: 10% / 5% / 2%
+- 트레일링 스톱: 2% 이익 후 1% 트레일링
+
+=== 첨부 파일 ===
+
+1. SimpleAdaptiveStrategy.py - 전략 코드 (필수)
+2. STRATEGY_HANDOVER.md - 상세 설명서
+
+=== 설치 방법 ===
+
+# 1. 전략 파일 업로드
+scp SimpleAdaptiveStrategy.py root@YOUR_SERVER:/path/to/freqtrade/user_data/strategies/
+
+# 2. 전략 확인
+freqtrade list-strategies --config config.json
+
+# 3. config.json 수정
+{
+    "strategy": "SimpleAdaptiveStrategy",
+    "timeframe": "1h",
+    "max_open_trades": 3,
+    "stake_amount": 20
+}
+
+# 4. 봇 재시작
+docker-compose restart
+# 또는
+freqtrade trade --config config.json --strategy SimpleAdaptiveStrategy
+
+=== 필요한 작업 ===
+
+[여기에 구체적인 요청 작성]
+
+예시:
+- 전략 파일을 서버에 업로드
+- 백테스트로 성과 검증
+- Dry Run으로 테스트
+- 실전 적용 및 모니터링
+- 성과 리포트 작성
+
+=== 참고 사항 ===
+
+- 이미 실행 중인 Freqtrade 서버에 전략만 추가
+- 기존 설정은 유지하고 전략만 변경
+- 상세 설명은 STRATEGY_HANDOVER.md 참조
+
+질문이나 도움이 필요하면 알려주세요!
